@@ -1,5 +1,5 @@
 
-SERVICE_NAME=desktop-app-demo
+SERVICE_NAME=sealos-deploy-manager
 # Image URL to use all building/pushing image targets
 IMG ?= $(SERVICE_NAME):latest
 
@@ -35,7 +35,7 @@ run: ## Run a dev service from host.
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the desktop-frontend.
-	sudo docker build -t $(IMG) .
+	docker build -t $(IMG) .
 
 ##@ Deployment
 

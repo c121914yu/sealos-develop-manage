@@ -1,12 +1,9 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: false,
-  sassOptions: {
-    additionalData: `
-      @import "@/styles/variables.scss";
-    `,
-  }
-}
+  compress: true
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

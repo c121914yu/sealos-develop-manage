@@ -1,10 +1,38 @@
-import Head from "next/head";
-import type { AppProps } from "next/app";
-import { ChakraProvider } from "@chakra-ui/react";
-import "@/styles/reset.scss";
-import "@/styles/globals.scss";
+import Head from 'next/head';
+import type { AppProps } from 'next/app';
+import { ChakraProvider } from '@chakra-ui/react';
+import { theme } from '@/constants/resetUI';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@/styles/reset.scss';
+import '@/styles/globals.scss';
+import { sealosApp, createSealosApp } from 'sealos-desktop-sdk';
+import { useEffect } from 'react';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+      cacheTime: 0
+    }
+  }
+});
 
 export default function App({ Component, pageProps }: AppProps) {
+  useEffect(() => {
+    const response = createSealosApp({
+      appKey: 'sealos-deploy-manager'
+    });
+
+    (async () => {
+      const res = await sealosApp.getUserInfo();
+      localStorage.setItem('session', JSON.stringify(res));
+    })();
+
+    return response;
+  }, []);
+
   return (
     <>
       <Head>
@@ -14,9 +42,11 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.ico" />
         <script src="/static/iconfont.js" async></script>
       </Head>
-      <ChakraProvider>
-        <Component {...pageProps} />
-      </ChakraProvider>
+      <QueryClientProvider client={queryClient}>
+        <ChakraProvider theme={theme}>
+          <Component {...pageProps} />
+        </ChakraProvider>
+      </QueryClientProvider>
     </>
   );
 }

@@ -1,22 +1,16 @@
 type TIconfont = {
   name: string;
   color?: string;
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   className?: string;
 };
 
-function Icon({
-  name,
-  color = "inherit",
-  width = 16,
-  height = 16,
-  className = "",
-}: TIconfont) {
+function Icon({ name, color = '#333', width = 16, height = 16, className = '' }: TIconfont) {
   const style = {
     fill: color,
     width,
-    height,
+    height
   };
 
   return (

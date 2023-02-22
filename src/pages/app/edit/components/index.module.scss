@@ -1,0 +1,38 @@
+.codeBox {
+  &::-webkit-scrollbar,
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  &::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-track {
+    background: rgb(239, 239, 239);
+    border-radius: 2px;
+  }
+  &::-webkit-scrollbar-thumb,
+  ::-webkit-scrollbar-thumb {
+    background: #bfbfbf;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
+
+  .code {
+    height: 100%;
+    div {
+      background-color: transparent !important;
+      padding: 0 5px 0 0 !important;
+    }
+    * {
+      word-wrap: break-all !important;
+    }
+  }
+}
+
+.deleteIcon:hover {
+  svg {
+    fill: #d92a2a !important;
+  }
+}

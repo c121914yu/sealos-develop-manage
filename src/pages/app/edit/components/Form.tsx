@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import React, { useState, useRef, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -23,199 +18,343 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Textarea,
-  FormErrorMessage,
-} from "@chakra-ui/react";
-import { useForm, useFieldArray } from "react-hook-form";
-import Icon from "@/components/Icon";
-import type { AppEditType } from "../index.d";
-import { defaultEditVal } from "../constants";
+  Textarea
+} from '@chakra-ui/react';
+import { useFieldArray, UseFormReturn } from 'react-hook-form';
+import { useRouter } from 'next/router';
+import Icon from '@/components/Icon';
+import type { QueryType } from '@/types';
+import type { AppEditType } from '@/types/app';
+import styles from './index.module.scss';
+import { customAlphabet } from 'nanoid';
 
-interface Props {}
+const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 12);
 
-const Form = ({}: Props, ref: React.Ref<any>) => {
-  useImperativeHandle(ref, () => ({
-    apply: () => {
-      handleSubmit(onFinish)();
-    },
-  }));
-
+const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
+  if (!formHook) return null;
+  const { name } = useRouter().query as QueryType;
+  const isEdit = useMemo(() => !!name, [name]);
   const {
     register,
-    handleSubmit,
     control,
-    watch,
-    formState: { errors },
-  } = useForm<AppEditType>({
-    defaultValues: defaultEditVal,
-  });
+    setValue,
+    getValues,
+    formState: { errors }
+  } = formHook;
+  const [forceUpdate, setForceUpdate] = useState(false);
 
   const {
-    fields: accessExternalPorts,
-    append: appendAccessExternalPorts,
-    remove: removeAccessExternalPorts,
+    fields: servicePods,
+    append: appendServicePorts,
+    remove: removeServicePorts
   } = useFieldArray({
     control,
-    name: "accessExternal.ports",
+    name: 'servicePorts'
   });
   const {
     fields: envs,
     append: appendEnvs,
-    remove: removeEnvs,
+    remove: removeEnvs
   } = useFieldArray({
     control,
-    name: "envs",
+    name: 'envs'
   });
   const {
     fields: configMaps,
     append: appendConfigMaps,
-    remove: removeConfigMaps,
+    remove: removeConfigMaps
   } = useFieldArray({
     control,
-    name: "configMap",
-  });
-
-  watch((data, { name, type }) => {
-    // console.log(data);
-    // console.log(name, type);
+    name: 'configMapList'
   });
 
   const FormDom = useRef<HTMLFormElement>(null);
 
-  const [isShowExternalAccess, setShowExternalAccess] = useState(false);
-  const [isShowHPA, setShowHPA] = useState(true);
-
-  const onFinish = (values: any) => {
-    console.log("Success:", values);
-  };
-
   return (
-    <Box>
-      <Box mb={8}>
+    <Box className={styles.codeBox} height={'100%'} pr={5} overflow="auto">
+      <Box mb={5}>
         <strong>*基础配置</strong>
       </Box>
 
       <form ref={FormDom}>
-        <FormControl mb={8} isInvalid={!!errors.appName}>
-          <Flex alignItems={"center"}>
-            <Box w={"80px"}>应用名称</Box>
+        <FormControl mb={5} isInvalid={!!errors.appName}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 80px'}>应用名称</Box>
             <Input
-              {...register("appName", {
-                required: "应用名称不能为空",
-              })}
-            />
-          </Flex>
-          <FormErrorMessage>
-            {errors.appName && errors.appName.message}
-          </FormErrorMessage>
-        </FormControl>
-        <FormControl mb={8}>
-          <Flex alignItems={"center"}>
-            <Box w={"80px"}>镜像名</Box>
-            <Input
-              {...register("imageName", {
-                required: "镜像名不能为空",
+              disabled={isEdit}
+              title={isEdit ? '不允许修改应用名称' : ''}
+              {...register('appName', {
+                required: '应用名称不能为空',
+                pattern: {
+                  value: /^[a-z0-9]+([-.][a-z0-9]+)*$/g,
+                  message: '应用名只能包含小写字母、数字、-和.'
+                }
               })}
             />
           </Flex>
         </FormControl>
-        <FormControl mb={8}>
-          <Flex alignItems={"center"}>
-            <Box w={"80px"}>运行命令</Box>
-            <Input {...register("runCMD")} />
+        <Box mb={5}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 80px'}>镜像源</Box>
+            <Flex borderRadius={'sm'} overflow={'hidden'}>
+              <Box
+                py={2}
+                px={4}
+                backgroundColor={!getValues('secret.use') ? '#383B3C' : '#F7F8FA'}
+                color={!getValues('secret.use') ? '#ffffff' : '#8E9598'}
+                cursor={'pointer'}
+                onClick={() => {
+                  setValue('secret.use', false);
+                  setForceUpdate(!forceUpdate);
+                }}
+              >
+                公共
+              </Box>
+              <Box
+                py={2}
+                px={4}
+                backgroundColor={getValues('secret.use') ? '#383B3C' : '#F7F8FA'}
+                color={getValues('secret.use') ? '#ffffff' : '#8E9598'}
+                cursor={'pointer'}
+                onClick={() => {
+                  setValue('secret.use', true);
+                  setForceUpdate(!forceUpdate);
+                }}
+              >
+                私有
+              </Box>
+            </Flex>
+          </Flex>
+          <Box mt={3} pl={10} borderLeft="1px solid #E5E7E9">
+            <FormControl isInvalid={!!errors.imageName}>
+              <Flex alignItems={'center'}>
+                <Box flex={'0 0 80px'}>镜像名</Box>
+                <Input
+                  {...register('imageName', {
+                    required: '镜像名不能为空',
+                    pattern: {
+                      value: /^.+\/.+:.+$/g,
+                      message: '镜像名需满足 url/name:version 的格式'
+                    }
+                  })}
+                />
+              </Flex>
+            </FormControl>
+            {getValues('secret.use') ? (
+              <>
+                <FormControl mt={5} isInvalid={!!errors.secret?.username}>
+                  <Flex alignItems={'center'}>
+                    <Box flex={'0 0 80px'}>用户名</Box>
+                    <Input
+                      {...register('secret.username', {
+                        required: '私有镜像, 用户名不能为空'
+                      })}
+                    />
+                  </Flex>
+                </FormControl>
+                <FormControl mt={5} isInvalid={!!errors.secret?.password}>
+                  <Flex alignItems={'center'}>
+                    <Box flex={'0 0 80px'}>密码</Box>
+                    <Input
+                      {...register('secret.password', {
+                        required: '私有镜像, 密码不能为空'
+                      })}
+                    />
+                  </Flex>
+                </FormControl>
+                <FormControl mt={5} isInvalid={!!errors.secret?.serverAddress}>
+                  <Flex alignItems={'center'}>
+                    <Box flex={'0 0 130px'}>镜像仓库地址</Box>
+                    <Input
+                      {...register('secret.serverAddress', {
+                        required: '私有镜像, 地址不能为空'
+                      })}
+                    />
+                  </Flex>
+                </FormControl>
+              </>
+            ) : null}
+          </Box>
+        </Box>
+        <FormControl mb={5}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 80px'}>运行命令</Box>
+            <Input {...register('runCMD')} />
           </Flex>
         </FormControl>
-        <FormControl mb={8}>
-          <Flex alignItems={"center"}>
-            <Box w={"80px"}>命令参数</Box>
-            <Input {...register("cmdParam")} />
+        <FormControl mb={5}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 80px'}>命令参数</Box>
+            <Input {...register('cmdParam')} />
           </Flex>
         </FormControl>
-        <FormControl mb={8}>
-          <Flex alignItems={"center"}>
-            <Box w={"60px"}>副本数</Box>
-            <Input w={"100px"} {...register("liveAmount")} />
+        <FormControl mb={5}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 60px'}>副本数</Box>
+            <Input
+              type={'number'}
+              flex={'0 0 100px'}
+              {...register('replicas', {
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: '最小副本数为1'
+                }
+              })}
+            />
           </Flex>
         </FormControl>
-        <FormControl mb={8}>
-          <Flex alignItems={"center"}>
-            <Box w={"60px"}>CPU</Box>
-            <Input w={"90px"} {...register("cpu")} />
+        <FormControl mb={5}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 60px'}>CPU</Box>
+            <Input
+              type={'number'}
+              flex={'0 0 90px'}
+              {...register('cpu', {
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: '最小 CPU 为1'
+                }
+              })}
+              placeholder="默认5"
+            />
             <Box ml={2}>m</Box>
-
-            <Box ml={5} w={"60px"}>
+            <Box ml={5} flex={'0 0 60px'}>
               Memory
             </Box>
-            <Input w={"90px"} {...register("memory")} />
-            <Box ml={2}>M</Box>
+            <Input
+              type={'number'}
+              flex={'0 0 90px'}
+              {...register('memory', {
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: '最小 Memory 为1'
+                }
+              })}
+              placeholder="默认300"
+            />
+            <Box ml={2}>Mi</Box>
+          </Flex>
+        </FormControl>
+        <FormControl mb={5}>
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 106px'}>容器暴露端口</Box>
+            <Input
+              type={'number'}
+              maxW={'230px'}
+              {...register('containerOutPort', {
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: '暴露端口需要为正数'
+                }
+              })}
+            />
           </Flex>
         </FormControl>
         <FormControl>
-          <Flex alignItems={"center"}>
-            <Box w={"106px"}>容器暴露端口</Box>
-            <Input w={"230px"} {...register("containerOutPort")} />
+          <Flex alignItems={'center'}>
+            <Box flex={'0 0 90px'}>端口号转发</Box>
+
+            <Box maxW={'300px'}>
+              {servicePods.map((port, index) => (
+                <Box key={port.id} _notLast={{ mb: 3 }}>
+                  <Flex alignItems={'center'}>
+                    <Input
+                      type={'number'}
+                      flex={1}
+                      {...register(`servicePorts.${index}.start`, {
+                        valueAsNumber: true,
+                        required: '转发端口号不能为空',
+                        min: {
+                          value: 1,
+                          message: '端口号需为正数'
+                        }
+                      })}
+                    />
+                    <Box mx={3} fontWeight={'bold'}>
+                      {'->'}
+                    </Box>
+                    <Input
+                      type={'number'}
+                      flex={1}
+                      {...register(`servicePorts.${index}.end`, {
+                        valueAsNumber: true,
+                        required: '转发端口号不能为空',
+                        min: {
+                          value: 1,
+                          message: '端口号需为正数'
+                        }
+                      })}
+                    />
+                    <Box
+                      className={styles.deleteIcon}
+                      ml={3}
+                      cursor={'pointer'}
+                      onClick={() => removeServicePorts(index)}
+                    >
+                      <Icon name="icon-shanchu" width={'20px'} height={'20px'} />
+                    </Box>
+                  </Flex>
+                </Box>
+              ))}
+
+              {servicePods.length < 1 && (
+                <Button
+                  width="100%"
+                  onClick={() => {
+                    appendServicePorts({ start: '', end: '' });
+                  }}
+                >
+                  <Icon name="icon-plus" color="#666666"></Icon>
+                  &ensp;设置端口转发
+                </Button>
+              )}
+            </Box>
           </Flex>
         </FormControl>
 
         <Divider mt={10} mb={10} />
 
         <Box>
-          <Flex mb={5} justifyContent={"space-between"}>
+          <Flex mb={5} justifyContent={'space-between'}>
             <strong>外网访问</strong>
             <Switch
-              size={"lg"}
-              isChecked={isShowExternalAccess}
-              onChange={() => {
-                setShowExternalAccess(!isShowExternalAccess);
-              }}
+              size={'lg'}
+              isChecked={getValues('accessExternal.use')}
+              {...register('accessExternal.use', {
+                onChange: () => {
+                  // first open, add init data
+                  if (!getValues('accessExternal.outDomain')) {
+                    setValue('accessExternal', {
+                      use: true,
+                      outDomain: nanoid(),
+                      selfDomain: ''
+                    });
+                  }
+                  setForceUpdate(!forceUpdate);
+                }
+              })}
             />
           </Flex>
-          {isShowExternalAccess && (
-            <Box w={"320px"}>
-              <Box mb={5}>端口号</Box>
-
-              {accessExternalPorts.map((port, index) => (
-                <Box mb={3} key={port.id}>
-                  <Flex alignItems={"center"}>
-                    <Box mr={3}>从</Box>
-                    <Input
-                      flex={1}
-                      mr={5}
-                      {...register(`accessExternal.ports.${index}.start`)}
-                    />
-                    <Box mr={3}>转发到</Box>
-                    <Input
-                      flex={1}
-                      {...register(`accessExternal.ports.${index}.end`)}
-                    />
-                  </Flex>
-                </Box>
-              ))}
-
-              <Button
-                width="100%"
-                onClick={() => {
-                  appendAccessExternalPorts({ start: "", end: "" });
-                }}
-              >
-                <Icon name="icon-plus" color="#666666"></Icon>
-                新增端口号
-              </Button>
-
+          {getValues('accessExternal.use') && (
+            <Box w={'320px'}>
               <FormControl mt={5}>
-                <Flex alignItems={"center"}>
-                  <Box w={"80px"}>出口域名</Box>
-                  <Input flex={1} {...register("accessExternal.outDomain")} />
-                  &ensp;.cloud.sealos.io
+                <Flex alignItems={'center'}>
+                  <Box flex={'0 0 80px'}>出口域名</Box>
+                  {getValues('accessExternal.outDomain')}
+                  .cloud.sealos.io
                 </Flex>
               </FormControl>
               <FormControl mt={5}>
-                <Flex alignItems={"center"}>
-                  <Box w={"80px"}>自定义域名</Box>
+                <Flex alignItems={'center'}>
+                  <Box flex={'0 0 80px'}>自定义域名</Box>
                   <Input
                     flex={1}
                     placeholder="custom domain"
-                    {...register("accessExternal.selfDomain")}
+                    {...register('accessExternal.selfDomain')}
                   />
                 </Flex>
               </FormControl>
@@ -226,32 +365,39 @@ const Form = ({}: Props, ref: React.Ref<any>) => {
         <Divider mt={6} mb={6} />
 
         <Accordion defaultIndex={[0]} p={0} allowToggle>
-          <AccordionItem border={"none"} p={0}>
-            <AccordionButton p={"10px 0"}>
-              <Box as="span" flex="1" textAlign="left" fontWeight={"bold"}>
+          <AccordionItem border={'none'} p={0}>
+            <AccordionButton p={'10px 0'}>
+              <Box as="span" flex="1" textAlign="left" fontWeight={'bold'}>
                 环境变量
               </Box>
               <AccordionIcon />
             </AccordionButton>
-            <AccordionPanel p={"10px 0"} w={"340px"}>
+            <AccordionPanel p={'10px 0'} w={'340px'}>
               {envs.map((env, index) => (
-                <Flex key={env.id}>
+                <Flex key={env.id} alignItems={'center'} _notLast={{ mb: 3 }}>
                   <Input
-                    mr={5}
                     placeholder="key"
-                    {...register(`envs.${index}.key`)}
+                    {...register(`envs.${index}.key`, {
+                      required: '环境变量不能为空'
+                    })}
                   ></Input>
                   <Input
+                    mx={5}
                     placeholder="value"
-                    {...register(`envs.${index}.value`)}
+                    {...register(`envs.${index}.value`, {
+                      required: '环境变量不能为空'
+                    })}
                   ></Input>
+                  <Box
+                    className={styles.deleteIcon}
+                    cursor={'pointer'}
+                    onClick={() => removeEnvs(index)}
+                  >
+                    <Icon name="icon-shanchu" width={'20px'} height={'20px'} />
+                  </Box>
                 </Flex>
               ))}
-              <Button
-                mt={3}
-                width="100%"
-                onClick={() => appendEnvs({ key: "", value: "" })}
-              >
+              <Button mt={3} width="100%" onClick={() => appendEnvs({ key: '', value: '' })}>
                 <Icon name="icon-plus" color="#666666"></Icon>
                 新增环境变量
               </Button>
@@ -259,48 +405,75 @@ const Form = ({}: Props, ref: React.Ref<any>) => {
           </AccordionItem>
         </Accordion>
 
-        <Divider mt={6} mb={8} />
+        <Divider mt={6} mb={5} />
 
         <Box>
-          <Flex mb={5} justifyContent={"space-between"}>
+          <Flex mb={5} justifyContent={'space-between'}>
             <strong>HPA (弹性伸缩)</strong>
             <Switch
-              size={"lg"}
-              isChecked={isShowHPA}
-              onChange={() => {
-                setShowHPA(!isShowHPA);
-              }}
+              size={'lg'}
+              isChecked={getValues('hpa.use')}
+              {...register('hpa.use', {
+                onChange: () => {
+                  setForceUpdate(!forceUpdate);
+                }
+              })}
             />
           </Flex>
-          {isShowHPA && (
-            <Box width={"400px"}>
-              <Flex alignItems={"center"}>
-                <Select
-                  mr={5}
-                  placeholder="CPU目标值"
-                  {...register("hpa.target")}
-                ></Select>
-                <Input mr={2} {...register("hpa.value")} />
+          {getValues('hpa.use') && (
+            <Box width={'400px'}>
+              <Flex alignItems={'center'}>
+                <Select mr={5} placeholder="CPU目标值" {...register('hpa.target')}></Select>
+                <Input
+                  type={'number'}
+                  mr={2}
+                  {...register('hpa.value', {
+                    required: 'cpu目标值为空',
+                    valueAsNumber: true,
+                    min: {
+                      value: 1,
+                      message: 'cpu目标值需为正数'
+                    }
+                  })}
+                />
                 <Box>%</Box>
               </Flex>
 
               <FormControl mt={5}>
-                <Flex alignItems={"center"}>
+                <Flex alignItems={'center'}>
                   <Box mr={5} flexShrink={0}>
                     副本数
                   </Box>
                   <NumberInput>
-                    <NumberInputField {...register("hpa.livesAmountStart")} />
+                    <NumberInputField
+                      {...register('hpa.livesAmountStart', {
+                        required: '副本下限为空',
+                        valueAsNumber: true,
+                        min: {
+                          value: 1,
+                          message: '副本下限需为正数'
+                        }
+                      })}
+                    />
                     <NumberInputStepper>
                       <NumberIncrementStepper />
                       <NumberDecrementStepper />
                     </NumberInputStepper>
                   </NumberInput>
-                  <Box ml={2} mr={2} fontWeight={"bold"}>
+                  <Box ml={2} mr={2} fontWeight={'bold'}>
                     ~
                   </Box>
                   <NumberInput>
-                    <NumberInputField {...register("hpa.livesAmountEnd")} />
+                    <NumberInputField
+                      {...register('hpa.livesAmountEnd', {
+                        required: '副本上限为空',
+                        valueAsNumber: true,
+                        min: {
+                          value: 1,
+                          message: '副本上限需为正数'
+                        }
+                      })}
+                    />
                     <NumberInputStepper>
                       <NumberIncrementStepper />
                       <NumberDecrementStepper />
@@ -312,30 +485,39 @@ const Form = ({}: Props, ref: React.Ref<any>) => {
           )}
         </Box>
 
-        <Divider mt={6} mb={8} />
+        <Divider mt={6} mb={5} />
 
         <Accordion defaultIndex={[0]} p={0} allowToggle>
-          <AccordionItem border={"none"} p={0}>
-            <AccordionButton p={"10px 0"}>
-              <Box as="span" flex="1" textAlign="left" fontWeight={"bold"}>
+          <AccordionItem border={'none'} p={0}>
+            <AccordionButton p={'10px 0'}>
+              <Box as="span" flex="1" textAlign="left" fontWeight={'bold'}>
                 Configmap 配置文件
               </Box>
               <AccordionIcon />
             </AccordionButton>
-            <AccordionPanel p={"10px 0"} w={"350px"}>
+            <AccordionPanel p={'10px 0'} w={'350px'}>
               {configMaps.map((item, index) => (
                 <Box key={item.id} _notLast={{ mb: 5 }}>
-                  <Input
-                    mb={2}
-                    placeholder="文件名"
-                    {...register(`configMap.${index}.filename`)}
-                  ></Input>
+                  <Flex alignItems={'center'} mb={2}>
+                    <Input
+                      placeholder="文件名"
+                      {...register(`configMapList.${index}.mountPath`)}
+                    ></Input>
+                    <Box
+                      className={styles.deleteIcon}
+                      ml={3}
+                      cursor={'pointer'}
+                      onClick={() => removeConfigMaps(index)}
+                    >
+                      <Icon name="icon-shanchu" width={'20px'} height={'20px'} />
+                    </Box>
+                  </Flex>
                   <Textarea
-                    resize={"none"}
+                    resize={'none'}
                     rows={3}
-                    whiteSpace={"nowrap"}
+                    whiteSpace={'nowrap'}
                     placeholder="值"
-                    {...register(`configMap.${index}.value`)}
+                    {...register(`configMapList.${index}.value`)}
                   ></Textarea>
                 </Box>
               ))}
@@ -343,7 +525,7 @@ const Form = ({}: Props, ref: React.Ref<any>) => {
               <Button
                 mt={3}
                 width="100%"
-                onClick={() => appendConfigMaps({ filename: "", value: "" })}
+                onClick={() => appendConfigMaps({ mountPath: '', value: '' })}
               >
                 <Icon name="icon-plus" color="#666666"></Icon>
                 新增 configmap
@@ -351,9 +533,11 @@ const Form = ({}: Props, ref: React.Ref<any>) => {
             </AccordionPanel>
           </AccordionItem>
         </Accordion>
+
+        <Divider mt={6} mb={5} />
       </form>
     </Box>
   );
 };
 
-export default forwardRef(Form);
+export default Form;
