@@ -20,3 +20,5 @@ export const getAppPodsByAppName = (name: string) =>
   GET<ResponseAppPodType[]>('/api/getAppPodsByAppName', { name }).then((item) =>
     item.map(adaptPod)
   );
+
+export const getPodLogs = (podName: string) => GET(`/api/geetPodLogs?podName=${podName}`);

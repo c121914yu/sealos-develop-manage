@@ -53,7 +53,7 @@ const Yaml = ({
       }
       setLoadingFiles(false);
     },
-    [toast]
+    [setValues, toast]
   );
 
   return (

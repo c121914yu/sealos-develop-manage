@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Box, Button, Flex, Grid } from '@chakra-ui/react';
 import Icon from '@/components/Icon';
@@ -21,19 +21,19 @@ import { adaptEditAppData } from '@/utils/adapt';
 import { useToast } from '@/hooks/useToast';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/app';
-import Loading from '@/components/Loading';
+import { useLoading } from '@/hooks/useLoading';
 
 import Form from './components/Form';
 import Yaml from './components/Yaml';
 
 const EditApp = () => {
   const { toast } = useToast();
+  const { Loading, setIsLoading } = useLoading();
   const router = useRouter();
   const { AlertDom, openAlert: confirmApply } = useAlert();
   const { name } = router.query as QueryType;
   const { setAppDetail } = useAppStore();
   const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!name);
-  const [loading, setLoading] = useState(false);
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
 
   // form
@@ -105,7 +105,7 @@ const EditApp = () => {
   });
 
   const submitSuccess = useCallback(async () => {
-    setLoading(true);
+    setIsLoading(true);
     try {
       console.log(yamlList.map((item) => item.value));
       const data = yamlList.map((item) => item.value);
@@ -126,8 +126,8 @@ const EditApp = () => {
         status: 'error'
       });
     }
-    setLoading(false);
-  }, [applyError, applySuccess, name, router, toast, yamlList]);
+    setIsLoading(false);
+  }, [applyError, applySuccess, name, router, setIsLoading, toast, yamlList]);
   const submitError = useCallback(() => {
     // deep search message
     const deepSearch = (obj: any): string => {
@@ -148,7 +148,7 @@ const EditApp = () => {
 
   // default yaml
   useQuery(['initYaml'], () => {
-    setYamlList([
+    return setYamlList([
       {
         filename: 'service.yaml',
         kind: 'Service',
@@ -166,7 +166,7 @@ const EditApp = () => {
     ['setAppDetail', name],
     () => {
       if (!name) return null;
-      setLoading(true);
+      setIsLoading(true);
       return setAppDetail(name);
     },
     {
@@ -174,8 +174,11 @@ const EditApp = () => {
       onSuccess(res) {
         res && formHook.reset(adaptEditAppData(res));
       },
+      onError() {
+        setIsLoading(false);
+      },
       onSettled(data) {
-        data && setLoading(false);
+        data && setIsLoading(false);
       }
     }
   );
@@ -231,7 +234,7 @@ const EditApp = () => {
         </Grid>
       </Box>
       <AlertDom />
-      {loading && <Loading />}
+      <Loading />
     </>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Box,
@@ -14,9 +14,15 @@ import {
 } from '@chakra-ui/react';
 import type { PodDetailType } from '@/types/app';
 import Icon from '@/components/Icon';
-import Loading from '@/components/Loading';
+import dynamic from 'next/dynamic';
+import { useLoading } from '@/hooks/useLoading';
+
+const Logs = dynamic(() => import('./Logs'));
 
 const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean }) => {
+  const [logsPod, setLogsPod] = useState<string>();
+  const { Loading } = useLoading();
+
   const columns: {
     title: string;
     dataIndex?: keyof PodDetailType;
@@ -62,9 +68,7 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
       title: '操作',
       key: 'control',
       render: (item: PodDetailType) => (
-        <>
-          <Button>日志</Button>
-        </>
+        <Button onClick={() => setLogsPod(item.podName)}>日志</Button>
       )
     }
   ];
@@ -102,7 +106,8 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
           </Tbody>
         </Table>
       </TableContainer>
-      {loading && <Loading fixed={false} />}
+      <Loading loading={loading} fixed={false} />
+      {!!logsPod && <Logs podName={logsPod} closeFn={() => setLogsPod(undefined)} />}
     </Card>
   );
 };
