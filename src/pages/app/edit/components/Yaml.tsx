@@ -63,6 +63,7 @@ const Yaml = ({
       height={'100%'}
       px={'20px'}
       py={'16px'}
+      boxShadow={'base'}
     >
       <Flex
         w={'100%'}
@@ -71,7 +72,7 @@ const Yaml = ({
         align={'center'}
         justifyContent={'space-between'}
       >
-        <Box>yaml 配置文件</Box>
+        <Box fontWeight={'bold'}>yaml 配置文件</Box>
 
         <>
           <Input
@@ -91,8 +92,9 @@ const Yaml = ({
             }}
             isLoading={loadingFiles}
             loadingText="文件解析中..."
+            variant={'outline'}
           >
-            <Icon name="icon-plus"></Icon>
+            <Icon name="icon-plus" color={'var(--chakra-colors-blue-500)'}></Icon>
             <Box ml={1}>导入yaml配置文件</Box>
           </Button>
         </>

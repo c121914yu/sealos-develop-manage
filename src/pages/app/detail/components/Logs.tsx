@@ -33,7 +33,7 @@ const Logs = ({ podName, closeFn }: { podName: string; closeFn: () => void }) =>
         <ModalHeader>{podName} 日志</ModalHeader>
         <ModalCloseButton />
         <ModalBody>{logs}</ModalBody>
-        <Loading loading={isLoading} />
+        <Loading loading={isLoading} fixed={false} />
       </ModalContent>
     </Modal>
   );

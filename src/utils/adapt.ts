@@ -14,7 +14,7 @@ import type {
   ResponseAppPodType,
   AppDetailType
 } from '@/types/app';
-import { appStatusMap } from '@/constants/app';
+import { appStatusMap, podStatusMap } from '@/constants/app';
 import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
 import { defaultEditVal } from '@/constants/editApp';
@@ -23,7 +23,10 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
   return {
     id: app.metadata?.uid || `${Date.now()}`,
     name: app.metadata?.name || 'app name',
-    status: appStatusMap.waiting,
+    status:
+      app.status?.readyReplicas === app.status?.replicas
+        ? appStatusMap.running
+        : appStatusMap.waiting,
     createTime: dayjs(app.metadata?.creationTimestamp).format('YYYY-MM-DD hh:mm'),
     cpu: [0, 0, 0, 0, 0, 0],
     memory: [0, 0, 0, 0, 0, 0],
@@ -34,7 +37,8 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
 export const adaptPod = (pod: ResponseAppPodType): PodDetailType => {
   return {
     podName: pod.metadata?.name || '无法获取pod name',
-    status: pod.status?.phase || '无法获取pod status',
+    // @ts-ignore
+    status: podStatusMap[pod.status?.phase] || podStatusMap.Failed,
     rule: 'test',
     nodeName: pod.spec?.nodeName || '无法获取pod nodeName',
     ip: pod.status?.podIP || '无法获取pod ip',
@@ -82,7 +86,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     createTime: dayjs(deployKindsMap.Deployment.metadata?.creationTimestamp).format(
       'YYYY-MM-DD hh:mm'
     ),
-    status: appStatusMap.waiting,
+    status: appStatusMap.running,
     imageName: deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.image || '',
     runCMD:
       deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.command?.join(' ') || '',

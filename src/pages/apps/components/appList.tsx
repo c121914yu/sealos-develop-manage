@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, TableContainer } from '@chakra-ui/react';
@@ -29,7 +29,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
     {
       title: '状态',
       key: 'status',
-      render: (item: AppListItemType) => <div>{item.status.label}</div>
+      render: (item: AppListItemType) => <Box color={item.status.color}>{item.status.label}</Box>
     },
     {
       title: '创建时间',
@@ -66,7 +66,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
         <>
           <Button
             colorScheme={'green'}
-            mr={2}
+            mr={4}
             onClick={() => {
               router.push(`/app/detail?name=${item.name}`);
             }}
@@ -89,7 +89,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
   const router = useRouter();
 
   return (
-    <Box backgroundColor={'#f7f8fa'} p={34} minH="100vh">
+    <Box backgroundColor={'#f9f9f9'} p={34} minH="100vh">
       <Box display={'flex'} alignItems={'flex-start'} justifyContent={'space-between'}>
         <Box display={'flex'} alignItems={'center'}>
           <Image className="" src="/imgs/no-app.svg" width={46} height={44} alt=""></Image>
@@ -102,7 +102,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
           新建应用
         </Button>
       </Box>
-      <TableContainer mt={5}>
+      <TableContainer mt={5} borderRadius={'md'} boxShadow={'base'}>
         <Table variant={'simple'} backgroundColor={'white'}>
           <Thead>
             <Tr>

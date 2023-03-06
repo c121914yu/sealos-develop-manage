@@ -3,7 +3,7 @@ import { Box, Flex, Button } from '@chakra-ui/react';
 import type { AppStatusMapType } from '@/types/app';
 import Icon from '@/components/Icon';
 import { useRouter } from 'next/router';
-import { delAppByName } from '@/api/app';
+import { delAppByName, restartAppByName } from '@/api/app';
 import { useToast } from '@/hooks/useToast';
 import { useConfirm } from '@/hooks/useConfirm';
 import { AppStatusEnum, appStatusMap } from '@/constants/app';
@@ -17,9 +17,13 @@ const Header = ({
 }) => {
   const router = useRouter();
   const { toast } = useToast();
-  const { openConfirm, ConfirmChild } = useConfirm({
+  const { openConfirm: openDelConfirm, ConfirmChild: DelConfirmChild } = useConfirm({
     content: '确认删除该应用?'
   });
+  const { openConfirm: openRestartConfirm, ConfirmChild: RestartConfirmChild } = useConfirm({
+    content: '确认重启该应用?'
+  });
+
   const [loading, setLoading] = useState(false);
 
   const handleDelApp = useCallback(async () => {
@@ -31,11 +35,33 @@ const Header = ({
         status: 'success'
       });
       router.replace('/');
-    } catch (error) {
+    } catch (error: any) {
+      toast({
+        title: typeof error === 'string' ? error : error.message || '删除出现了意外',
+        status: 'error'
+      });
       console.error(error);
     }
     setLoading(false);
   }, [appName, toast, router]);
+
+  const handleRestartApp = useCallback(async () => {
+    try {
+      setLoading(true);
+      await restartAppByName(appName);
+      toast({
+        title: '重启成功',
+        status: 'success'
+      });
+    } catch (error: any) {
+      toast({
+        title: typeof error === 'string' ? error : error.message || '重启出现了意外',
+        status: 'error'
+      });
+      console.error(error);
+    }
+    setLoading(false);
+  }, [appName, toast]);
 
   return (
     <Flex h={'80px'} alignItems={'center'}>
@@ -47,31 +73,33 @@ const Header = ({
       </Box>
       <Icon name="icon-info"></Icon>
       <Box flex={1}>
-        <Box ml={3}>{appStatus.label}</Box>
+        <Box ml={3} color={appStatus.color}>
+          {appStatus.label}
+        </Box>
       </Box>
       {/* btns */}
       <Button
-        mr={3}
+        mr={5}
         colorScheme={'blue'}
-        variant={'outline'}
         onClick={() => {
           router.push(`/app/edit?name=${appName}`);
         }}
       >
         变更应用
       </Button>
-      <Button mr={3} colorScheme={'blackAlpha'} variant={'outline'}>
-        重启应用
-      </Button>
       <Button
-        colorScheme={'red'}
-        variant={'outline'}
-        onClick={openConfirm(handleDelApp)}
+        mr={5}
+        colorScheme={'gray'}
+        onClick={openRestartConfirm(handleRestartApp)}
         isLoading={loading}
       >
-        删除应用
+        重启
       </Button>
-      <ConfirmChild />
+      <Button colorScheme={'red'} onClick={openDelConfirm(handleDelApp)} isLoading={loading}>
+        <Icon name="icon-shanchu" color={'#fff'}></Icon>
+      </Button>
+      <DelConfirmChild />
+      <RestartConfirmChild />
     </Flex>
   );
 };

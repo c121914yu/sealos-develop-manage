@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Card,
   Box,
   Button,
   Table,
@@ -61,8 +60,8 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
     },
     {
       title: '状态',
-      dataIndex: 'status',
-      key: 'status'
+      key: 'status',
+      render: (item: PodDetailType) => <Box color={item.status.color}>{item.status.label}</Box>
     },
     {
       title: '操作',
@@ -74,7 +73,7 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
   ];
 
   return (
-    <Card minH={'100%'} py={7}>
+    <Box minH={'100%'} py={7}>
       <Flex px={4} alignItems={'center'}>
         <Icon name="icon-info" />
         <Box ml={2} flex={1}>
@@ -108,7 +107,7 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
       </TableContainer>
       <Loading loading={loading} fixed={false} />
       {!!logsPod && <Logs podName={logsPod} closeFn={() => setLogsPod(undefined)} />}
-    </Card>
+    </Box>
   );
 };
 

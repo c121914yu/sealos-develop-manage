@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { AppListItemType, AppDetailType } from '@/types/app';
 import { getMyApps, getAppPodsByAppName, getAppByName } from '@/api/app';
+import { appStatusMap, PodStatusEnum } from '@/constants/app';
 
 type State = {
   appList: AppListItemType[];
@@ -49,6 +50,10 @@ export const useAppStore = create<State>()(
           aveMemory,
           pods
         };
+        const appStatus =
+          app.pods.filter((pod) => pod.status.value === PodStatusEnum.Running).length > 0
+            ? appStatusMap.running
+            : appStatusMap.waiting;
 
         // update app
         if (get()?.appDetail?.appName === appName) {
@@ -57,6 +62,7 @@ export const useAppStore = create<State>()(
             state.appDetail.usedCpu = state.appDetail.usedCpu.slice(1).concat(app.aveCpu);
             state.appDetail.usedMemory = state.appDetail.usedMemory.slice(1).concat(app.aveMemory);
             state.appDetail.pods = app.pods;
+            state.appDetail.status = appStatus;
           });
         }
 
@@ -65,7 +71,9 @@ export const useAppStore = create<State>()(
           state.appList = state.appList.map((item) => ({
             ...item,
             cpu: item.name === appName ? item.cpu.slice(1).concat(app.aveCpu) : item.cpu,
-            memory: item.name === appName ? item.memory.slice(1).concat(app.aveMemory) : item.memory
+            memory:
+              item.name === appName ? item.memory.slice(1).concat(app.aveMemory) : item.memory,
+            status: appStatus
           }));
         });
 

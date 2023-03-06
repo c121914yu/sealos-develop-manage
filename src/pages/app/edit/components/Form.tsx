@@ -71,7 +71,14 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
   const FormDom = useRef<HTMLFormElement>(null);
 
   return (
-    <Box className={styles.codeBox} height={'100%'} pr={5} overflow="auto">
+    <Box
+      className={styles.codeBox}
+      height={'100%'}
+      p={5}
+      overflow="auto"
+      boxShadow={'base'}
+      borderRadius={'md'}
+    >
       <Box mb={5}>
         <strong>*基础配置</strong>
       </Box>
@@ -100,8 +107,8 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               <Box
                 py={2}
                 px={4}
-                backgroundColor={!getValues('secret.use') ? '#383B3C' : '#F7F8FA'}
-                color={!getValues('secret.use') ? '#ffffff' : '#8E9598'}
+                backgroundColor={!getValues('secret.use') ? 'blue.500' : 'blackAlpha.50'}
+                color={!getValues('secret.use') ? 'white' : 'blackAlpha.600'}
                 cursor={'pointer'}
                 onClick={() => {
                   setValue('secret.use', false);
@@ -113,8 +120,8 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               <Box
                 py={2}
                 px={4}
-                backgroundColor={getValues('secret.use') ? '#383B3C' : '#F7F8FA'}
-                color={getValues('secret.use') ? '#ffffff' : '#8E9598'}
+                backgroundColor={getValues('secret.use') ? 'blue.500' : 'blackAlpha.50'}
+                color={getValues('secret.use') ? 'white' : 'blackAlpha.600'}
                 cursor={'pointer'}
                 onClick={() => {
                   setValue('secret.use', true);
@@ -364,8 +371,8 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
 
         <Divider mt={6} mb={6} />
 
-        <Accordion defaultIndex={[0]} p={0} allowToggle>
-          <AccordionItem border={'none'} p={0}>
+        <Accordion defaultIndex={[0]} allowToggle>
+          <AccordionItem border={'none'}>
             <AccordionButton p={'10px 0'}>
               <Box as="span" flex="1" textAlign="left" fontWeight={'bold'}>
                 环境变量
@@ -397,9 +404,14 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
                   </Box>
                 </Flex>
               ))}
-              <Button mt={3} width="100%" onClick={() => appendEnvs({ key: '', value: '' })}>
-                <Icon name="icon-plus" color="#666666"></Icon>
-                新增环境变量
+              <Button
+                mt={3}
+                width="100%"
+                onClick={() => appendEnvs({ key: '', value: '' })}
+                variant={'outline'}
+              >
+                <Icon name="icon-plus" color={'var(--chakra-colors-blue-500)'}></Icon>
+                <Box ml={1}>新增环境变量</Box>
               </Button>
             </AccordionPanel>
           </AccordionItem>
@@ -526,9 +538,10 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
                 mt={3}
                 width="100%"
                 onClick={() => appendConfigMaps({ mountPath: '', value: '' })}
+                variant={'outline'}
               >
-                <Icon name="icon-plus" color="#666666"></Icon>
-                新增 configmap
+                <Icon name="icon-plus" color={'var(--chakra-colors-blue-500)'}></Icon>
+                <Box ml={1}>新增 configmap</Box>
               </Button>
             </AccordionPanel>
           </AccordionItem>

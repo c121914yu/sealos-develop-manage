@@ -25,6 +25,7 @@ export interface ResponseAppPodType extends V1Pod {
 export interface AppStatusMapType {
   label: string;
   value: `${AppStatusEnum}`;
+  color: string;
 }
 
 export interface AppListItemType {
@@ -87,9 +88,14 @@ export interface AppDetailType extends AppEditType {
   pods: PodDetailType[];
 }
 
+export interface PodStatusMapType {
+  label: string;
+  value: `${PodStatusEnum}`;
+  color: string;
+}
 export interface PodDetailType {
   podName: string;
-  status: string;
+  status: PodStatusMapType;
   rule: string;
   nodeName: string;
   ip: string;

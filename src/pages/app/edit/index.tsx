@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { defaultEditVal, editModeMap } from '@/constants/editApp';
 import debounce from 'lodash/debounce';
 import { postDeployApp, putApp } from '@/api/app';
-import { useAlert } from '@/hooks/useAlert';
+import { useConfirm } from '@/hooks/useConfirm';
 import type { AppEditType } from '@/types/app';
 import { adaptEditAppData } from '@/utils/adapt';
 import { useToast } from '@/hooks/useToast';
@@ -30,11 +30,13 @@ const EditApp = () => {
   const { toast } = useToast();
   const { Loading, setIsLoading } = useLoading();
   const router = useRouter();
-  const { AlertDom, openAlert: confirmApply } = useAlert();
   const { name } = router.query as QueryType;
   const { setAppDetail } = useAppStore();
   const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!name);
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
+  const { openConfirm, ConfirmChild } = useConfirm({
+    content: applyMessage
+  });
 
   // form
   const formHook = useForm<AppEditType>({
@@ -209,14 +211,7 @@ const EditApp = () => {
           <Button
             flex={'0 0 155px'}
             colorScheme={'blue'}
-            onClick={formHook.handleSubmit(
-              () =>
-                confirmApply({
-                  message: applyMessage,
-                  onConfirm: submitSuccess
-                }),
-              submitError
-            )}
+            onClick={formHook.handleSubmit(openConfirm(submitSuccess), submitError)}
           >
             {applyBtnText}
           </Button>
@@ -224,7 +219,7 @@ const EditApp = () => {
         <Grid
           gridTemplateColumns={'1fr 480px'}
           gap={20}
-          maxWidth={1100}
+          maxWidth={'1200px'}
           mx={'auto'}
           position="relative"
           height={'calc(100vh - 100px)'}
@@ -233,7 +228,7 @@ const EditApp = () => {
           <Yaml yamlList={yamlList} setValues={formHook.setValue} />
         </Grid>
       </Box>
-      <AlertDom />
+      <ConfirmChild />
       <Loading />
     </>
   );

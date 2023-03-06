@@ -22,3 +22,5 @@ export const getAppPodsByAppName = (name: string) =>
   );
 
 export const getPodLogs = (podName: string) => GET(`/api/geetPodLogs?podName=${podName}`);
+
+export const restartAppByName = (appName: string) => GET(`/api/restartApp?appName=${appName}`);
