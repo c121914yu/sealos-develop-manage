@@ -1,12 +1,10 @@
 import { AppListItemType, AppDetailType, PodDetailType } from '@/types/app';
+import { appStatusMap, podStatusMap } from '@/constants/app';
 export const MOCK_APPS: AppListItemType[] = [
   {
     id: 'string',
     name: 'string',
-    status: {
-      label: '运行中',
-      value: 'running'
-    },
+    status: appStatusMap.running,
     createTime: 'string',
     cpu: [2, 1, 4, 1, 80, 50],
     memory: [2, 1, 4, 1, 2, 20],
@@ -15,10 +13,7 @@ export const MOCK_APPS: AppListItemType[] = [
   {
     id: 'string2',
     name: 'string',
-    status: {
-      label: '运行中',
-      value: 'running'
-    },
+    status: appStatusMap.running,
     createTime: 'string',
     cpu: [2, 1, 4, 1, 2],
     memory: [2, 1, 4, 1, 2],
@@ -27,10 +22,7 @@ export const MOCK_APPS: AppListItemType[] = [
   {
     id: 'string3',
     name: 'string',
-    status: {
-      label: '运行中',
-      value: 'running'
-    },
+    status: appStatusMap.running,
     createTime: 'string',
     cpu: [2, 1, 4, 1, 2],
     memory: [2, 1, 4, 1, 2],
@@ -146,7 +138,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -157,7 +149,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -168,7 +160,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -180,7 +172,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -192,7 +184,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -203,7 +195,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -214,7 +206,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -225,7 +217,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -237,7 +229,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   },
@@ -249,7 +241,7 @@ export const MOCK_PODS: PodDetailType[] = [
     ip: '311.241.41.41',
     restarts: 10,
     age: '22',
-    status: 'running',
+    status: podStatusMap.Running,
     cpu: 323,
     memory: 33
   }
@@ -257,10 +249,7 @@ export const MOCK_PODS: PodDetailType[] = [
 
 export const MOCK_APP_DETAIL: AppDetailType = {
   createTime: '2022/1/22',
-  status: {
-    label: '已创建',
-    value: 'running'
-  },
+  status: appStatusMap.waiting,
   appName: '答复水电费收到受到',
   imageName: 'dafdsa/asdfad:asdfsda',
   runCMD: 'dafda',

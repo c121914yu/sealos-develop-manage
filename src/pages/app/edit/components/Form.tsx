@@ -314,8 +314,9 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
                   onClick={() => {
                     appendServicePorts({ start: '', end: '' });
                   }}
+                  variant={'outline'}
                 >
-                  <Icon name="icon-plus" color="#666666"></Icon>
+                  <Icon name="icon-plus" color={'var(--chakra-colors-blue-500)'}></Icon>
                   &ensp;设置端口转发
                 </Button>
               )}

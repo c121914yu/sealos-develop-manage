@@ -36,6 +36,7 @@ export default function App({ Component, pageProps }: AppProps) {
     (async () => {
       const res = await sealosApp.getUserInfo();
       localStorage.setItem('session', JSON.stringify(res));
+      console.log('init app success');
     })();
     NProgress.done();
 
