@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { Box, Flex, Grid } from '@chakra-ui/react';
+import { Box, Flex, Grid, Tooltip } from '@chakra-ui/react';
 import type { AppDetailType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
 import { useCopyData } from '@/utils/tools';
+import dayjs from 'dayjs';
 
 const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
   if (!app) return null;
@@ -24,7 +25,8 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
         name: '应用信息',
         items: [
           {
-            label: '实时监控',
+            label: `实时监控`,
+            value: dayjs().format('HH:mm:ss'),
             render: () => (
               <Grid w={'100%'} mt={3} mb={7} templateColumns={'1fr 1fr'} gap={3}>
                 <Box h={'35px'}>
@@ -126,16 +128,16 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
           <Box>{info.name}</Box>
           <Box mt={2} p={4} backgroundColor={'#F8F8FA'} borderRadius={'sm'}>
             {info.items
-              ? info.items.map((item) => (
+              ? info.items.map((item, i) => (
                   <Flex
-                    key={item.label}
+                    key={item.label || i}
                     flexWrap={'wrap'}
                     _notFirst={{
                       mt: 4
                     }}
                   >
                     {item.label && (
-                      <Box flex={'1'} maxW={'45%'} color={'blackAlpha.800'}>
+                      <Box flex={'1'} color={'blackAlpha.800'}>
                         {item.label}
                       </Box>
                     )}
@@ -147,14 +149,15 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
                         overflow={'hidden'}
                         whiteSpace={'nowrap'}
                       >
-                        <Box
-                          as="span"
-                          title={item.value}
-                          cursor={'default'}
-                          onClick={() => item.value && !!item.copy && copyData(item.copy)}
-                        >
-                          {item.value}
-                        </Box>
+                        <Tooltip label={item.value}>
+                          <Box
+                            as="span"
+                            cursor={!!item.copy ? 'pointer' : 'default'}
+                            onClick={() => item.value && !!item.copy && copyData(item.copy)}
+                          >
+                            {item.value}
+                          </Box>
+                        </Tooltip>
                       </Box>
                     )}
                     {item.render && item.render()}

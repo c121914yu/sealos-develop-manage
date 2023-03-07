@@ -34,7 +34,7 @@ const Header = ({
         title: '删除成功',
         status: 'success'
       });
-      router.replace('/');
+      router.replace('/apps');
     } catch (error: any) {
       toast({
         title: typeof error === 'string' ? error : error.message || '删除出现了意外',

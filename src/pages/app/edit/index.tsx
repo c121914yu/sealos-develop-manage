@@ -117,7 +117,7 @@ const EditApp = () => {
           await putApp(data, name);
         } else {
           await postDeployApp(data);
-          router.push(`/`);
+          router.push(`/apps`);
         }
         toast({
           title: applySuccess,

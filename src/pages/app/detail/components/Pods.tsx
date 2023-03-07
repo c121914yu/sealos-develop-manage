@@ -21,12 +21,11 @@ const Logs = dynamic(() => import('./Logs'));
 const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean }) => {
   const [logsPod, setLogsPod] = useState<string>();
   const { Loading } = useLoading();
-
   const columns: {
     title: string;
     dataIndex?: keyof PodDetailType;
     key: string;
-    render?: (item: PodDetailType) => JSX.Element;
+    render?: (item: PodDetailType) => JSX.Element | string;
   }[] = [
     {
       title: '名字',
@@ -49,9 +48,14 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
       key: 'restarts'
     },
     {
-      title: 'Age',
-      key: 'age',
-      dataIndex: 'age'
+      title: 'Cpu',
+      key: 'cpu',
+      render: (item: PodDetailType) => `${item.cpu}M`
+    },
+    {
+      title: 'Memory',
+      key: 'memory',
+      render: (item: PodDetailType) => `${item.memory}Mi`
     },
     {
       title: '状态',
@@ -62,7 +66,9 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
       title: '操作',
       key: 'control',
       render: (item: PodDetailType) => (
-        <Button onClick={() => setLogsPod(item.podName)}>日志</Button>
+        <Button variant={'outline'} onClick={() => setLogsPod(item.podName)}>
+          日志
+        </Button>
       )
     }
   ];

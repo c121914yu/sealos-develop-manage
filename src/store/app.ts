@@ -41,12 +41,8 @@ export const useAppStore = create<State>()(
 
         const pods = await getAppPodsByAppName(appName);
         // compute average cpu and memory
-        const aveCpu = Number(
-          pods.reduce((sum, item) => sum + item.cpu / pods.length, 0).toFixed(1)
-        );
-        const aveMemory = Number(
-          pods.reduce((sum, item) => sum + item.memory / pods.length, 0).toFixed(1)
-        );
+        const aveCpu = Number(pods.reduce((sum, item) => sum + item.cpu, 0).toFixed(1));
+        const aveMemory = Number(pods.reduce((sum, item) => sum + item.memory, 0).toFixed(1));
 
         const app = {
           aveCpu,
@@ -58,19 +54,16 @@ export const useAppStore = create<State>()(
             ? appStatusMap.running
             : appStatusMap.waiting;
 
-        // update app
-        if (get()?.appDetail?.appName === appName) {
-          set((state) => {
-            if (!state.appDetail) return Promise.resolve('App detail 不存在');
+        set((state) => {
+          // update app
+          if (state?.appDetail?.appName === appName) {
             state.appDetail.usedCpu = state.appDetail.usedCpu.slice(1).concat(app.aveCpu);
             state.appDetail.usedMemory = state.appDetail.usedMemory.slice(1).concat(app.aveMemory);
             state.appDetail.pods = app.pods;
             state.appDetail.status = appStatus;
-          });
-        }
+          }
 
-        //  update appList
-        set((state) => {
+          //  update appList
           state.appList = state.appList.map((item) => ({
             ...item,
             cpu: item.name === appName ? item.cpu.slice(1).concat(app.aveCpu) : item.cpu,
