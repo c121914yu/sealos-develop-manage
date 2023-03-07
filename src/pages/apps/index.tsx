@@ -14,6 +14,7 @@ export default function Home() {
     ['updateAppMetrics', appList.length],
     () => appList.map((app) => updateAppMetrics(app.name)),
     {
+      refetchOnMount: true,
       refetchInterval: 3000
     }
   );

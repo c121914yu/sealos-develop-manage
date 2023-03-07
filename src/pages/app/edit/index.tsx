@@ -22,9 +22,10 @@ import { useToast } from '@/hooks/useToast';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/app';
 import { useLoading } from '@/hooks/useLoading';
-
+import dynamic from 'next/dynamic';
 import Form from './components/Form';
 import Yaml from './components/Yaml';
+const ErrorModal = dynamic(() => import('./components/ErrorModal'));
 
 const EditApp = () => {
   const { toast } = useToast();
@@ -34,6 +35,7 @@ const EditApp = () => {
   const { setAppDetail } = useAppStore();
   const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!name);
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
+  const [errorMessage, setErrorMessage] = useState('');
   const { openConfirm, ConfirmChild } = useConfirm({
     content: applyMessage
   });
@@ -106,30 +108,27 @@ const EditApp = () => {
     !!data && formOnchangeDebounce(data as AppEditType);
   });
 
-  const submitSuccess = useCallback(async () => {
+  const submitSuccess = useCallback(() => {
     setIsLoading(true);
-    try {
-      console.log(yamlList.map((item) => item.value));
-      const data = yamlList.map((item) => item.value);
-      if (name) {
-        await putApp(data, name);
-      } else {
-        await postDeployApp(data);
-        router.push(`/`);
+    setTimeout(async () => {
+      try {
+        const data = yamlList.map((item) => item.value);
+        if (name) {
+          await putApp(data, name);
+        } else {
+          await postDeployApp(data);
+          router.push(`/`);
+        }
+        toast({
+          title: applySuccess,
+          status: 'success'
+        });
+      } catch (error) {
+        setErrorMessage(String(error));
       }
-      toast({
-        title: applySuccess,
-        status: 'success'
-      });
-    } catch (error) {
-      console.log(error);
-      toast({
-        title: applyError,
-        status: 'error'
-      });
-    }
-    setIsLoading(false);
-  }, [applyError, applySuccess, name, router, setIsLoading, toast, yamlList]);
+      setIsLoading(false);
+    }, 500);
+  }, [applySuccess, name, router, setIsLoading, toast, yamlList]);
   const submitError = useCallback(() => {
     // deep search message
     const deepSearch = (obj: any): string => {
@@ -188,17 +187,8 @@ const EditApp = () => {
 
   return (
     <>
-      <Box minWidth={'1100px'} px={10} pt="70px">
-        <Flex
-          px={10}
-          height="70px"
-          alignItems={'center'}
-          justifyContent={'space-between'}
-          position="fixed"
-          top={0}
-          left={0}
-          right={0}
-        >
+      <Flex flexDirection={'column'} alignItems={'center'} h={'100%'} minWidth={'1100px'} px={10}>
+        <Flex px={10} py={4} w={'100%'} alignItems={'center'} justifyContent={'space-between'}>
           <Flex alignItems={'center'} cursor={'pointer'} onClick={() => router.back()}>
             <Box>
               <Icon name="icon-left-arrow" />
@@ -216,19 +206,24 @@ const EditApp = () => {
           </Button>
         </Flex>
         <Grid
+          flex={'1 0 0'}
+          h={0}
+          w={'100%'}
+          maxWidth={'1200px'}
+          mb={10}
           gridTemplateColumns={'1fr 480px'}
           gap={20}
-          maxWidth={'1200px'}
-          mx={'auto'}
           position="relative"
-          height={'calc(100vh - 100px)'}
         >
           <Form formHook={formHook} />
           <Yaml yamlList={yamlList} setValues={formHook.setValue} />
         </Grid>
-      </Box>
+      </Flex>
       <ConfirmChild />
       <Loading />
+      {!!errorMessage && (
+        <ErrorModal title={applyError} content={errorMessage} onClose={() => setErrorMessage('')} />
+      )}
     </>
   );
 };

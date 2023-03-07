@@ -24,7 +24,6 @@ export const appStatusMap = {
 export enum PodStatusEnum {
   Pending = 'Pending',
   Running = 'Running',
-  Succeeded = 'Succeeded',
   Failed = 'Failed',
   Unknown = 'Unknown'
 }
@@ -42,6 +41,11 @@ export const podStatusMap = {
   [PodStatusEnum.Failed]: {
     label: '错误',
     value: PodStatusEnum.Failed,
+    color: 'red.600'
+  },
+  [PodStatusEnum.Unknown]: {
+    label: '未知错误',
+    value: PodStatusEnum.Unknown,
     color: 'red.600'
   }
 };

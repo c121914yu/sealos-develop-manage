@@ -19,7 +19,7 @@ export type DeployKindsType =
 
 export interface ResponseAppPodType extends V1Pod {
   // api response pods
-  metrics: SinglePodMetrics;
+  metrics?: SinglePodMetrics;
 }
 
 export interface AppStatusMapType {
@@ -96,7 +96,6 @@ export interface PodStatusMapType {
 export interface PodDetailType {
   podName: string;
   status: PodStatusMapType;
-  rule: string;
   nodeName: string;
   ip: string;
   restarts: number;

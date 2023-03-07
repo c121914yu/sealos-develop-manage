@@ -64,19 +64,29 @@ export const json2Development = (data: AppEditType) => {
                 }
               ],
               imagePullPolicy: 'Always',
-              volumeMounts: data.configMapList.map((_, index) => ({
-                name: `${data.appName}${index}`,
-                mountPath: '/my-app',
-                readOnly: false
-              }))
+              volumeMounts:
+                data.configMapList.length > 0
+                  ? [
+                      {
+                        name: data.appName,
+                        mountPath: '/my-app',
+                        readOnly: false
+                      }
+                    ]
+                  : undefined
             }
           ],
-          volumes: data.configMapList.map((_, index) => ({
-            name: `${data.appName}${index}`,
-            configMap: {
-              name: `${data.appName}${index}`
-            }
-          }))
+          volumes:
+            data.configMapList.length > 0
+              ? [
+                  {
+                    name: data.appName,
+                    configMap: {
+                      name: data.appName
+                    }
+                  }
+                ]
+              : undefined
         }
       }
     }

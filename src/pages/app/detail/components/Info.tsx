@@ -71,15 +71,13 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
         items: app.accessExternal.use
           ? [
               {
-                label: 'Domain',
                 value:
                   app.accessExternal.selfDomain ||
-                  `${app.accessExternal.outDomain}.cloud.sealos.io`,
+                  `https://${app.accessExternal.outDomain}.cloud.sealos.io`,
                 copy:
                   app.accessExternal.selfDomain ||
                   `https://${app.accessExternal.outDomain}.cloud.sealos.io`
-              },
-              { label: 'IP', value: 'test' }
+              }
             ]
           : undefined
       },
@@ -97,17 +95,27 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
         name: 'HPA',
         items: app.hpa.use
           ? [
-              { label: app.hpa.target, value: `${app.hpa.value}%` },
+              { label: `${app.hpa.target}基准`, value: `${app.hpa.value}%` },
               { label: '副本数', value: `${app.hpa.minReplicas} ~ ${app.hpa.maxReplicas}` }
             ]
           : undefined
+      },
+      {
+        name: 'configMap',
+        items:
+          app.configMapList.length > 0
+            ? app.configMapList.map((item) => ({
+                label: item.mountPath,
+                value: item.value
+              }))
+            : undefined
       }
     ],
     [app]
   );
 
   return (
-    <Box minH={'100%'} px={4} py={7}>
+    <Box px={4} py={7}>
       {appInfoTable.map((info) => (
         <Box
           _notFirst={{

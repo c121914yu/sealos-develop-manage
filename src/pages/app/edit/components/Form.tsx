@@ -72,9 +72,10 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
     <Box
       className={styles.codeBox}
       height={'100%'}
-      overflow="auto"
+      overflowY={'auto'}
       boxShadow={'base'}
       borderRadius={'md'}
+      p={4}
     >
       <Box mb={5}>
         <strong>*基础配置</strong>
@@ -198,6 +199,8 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
             <Input
               type={'number'}
               flex={'0 0 100px'}
+              disabled={getValues('hpa.use')}
+              title={getValues('hpa.use') ? '已开启 HPA，无需调整副本数' : ''}
               {...register('replicas', {
                 required: '副本数不能为空',
                 valueAsNumber: true,
@@ -325,6 +328,100 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
           </Flex>
         </FormControl>
 
+        <Divider mt={6} mb={5} />
+
+        <Box>
+          <Flex mb={5} justifyContent={'space-between'}>
+            <strong>HPA (弹性伸缩)</strong>
+            <Switch
+              size={'lg'}
+              isChecked={getValues('hpa.use')}
+              {...register('hpa.use', {
+                onChange: () => {
+                  setForceUpdate(!forceUpdate);
+                  !!getValues('hpa.minReplicas') &&
+                    setValue('replicas', getValues('hpa.minReplicas'));
+                }
+              })}
+            />
+          </Flex>
+          {getValues('hpa.use') && (
+            <Box width={'400px'}>
+              <Flex alignItems={'center'}>
+                <Select mr={5} placeholder="CPU目标值" {...register('hpa.target')}>
+                  <option value="cpu">CPU目标值</option>
+                </Select>
+                <Input
+                  type={'number'}
+                  mr={2}
+                  {...register('hpa.value', {
+                    required: 'cpu目标值为空',
+                    valueAsNumber: true,
+                    min: {
+                      value: 1,
+                      message: 'cpu目标值需为正数'
+                    },
+                    max: {
+                      value: 100,
+                      message: 'cpu目标值需在100内'
+                    }
+                  })}
+                />
+                <Box>%</Box>
+              </Flex>
+
+              <FormControl mt={5}>
+                <Flex alignItems={'center'}>
+                  <Box mr={5} flexShrink={0}>
+                    副本数
+                  </Box>
+                  <NumberInput
+                    min={1}
+                    onChange={(e) => {
+                      setValue('hpa.minReplicas', +e);
+                      setValue('replicas', +e);
+                    }}
+                  >
+                    <NumberInputField
+                      {...register('hpa.minReplicas', {
+                        required: '副本下限不能为空',
+                        valueAsNumber: true,
+                        min: {
+                          value: 1,
+                          message: '副本下限需为正数'
+                        }
+                      })}
+                    />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <Box ml={2} mr={2} fontWeight={'bold'}>
+                    ~
+                  </Box>
+                  <NumberInput min={1} onChange={(e) => setValue('hpa.maxReplicas', +e)}>
+                    <NumberInputField
+                      {...register('hpa.maxReplicas', {
+                        required: '副本上限不能为空',
+                        valueAsNumber: true,
+                        min: {
+                          value: 1,
+                          message: '副本上限需为正数'
+                        }
+                      })}
+                    />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                </Flex>
+              </FormControl>
+            </Box>
+          )}
+        </Box>
+
         <Divider mt={10} mb={10} />
 
         <Box>
@@ -381,7 +478,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               </Box>
               <AccordionIcon />
             </AccordionButton>
-            <AccordionPanel p={'10px 0'} w={'340px'}>
+            <AccordionPanel w={'350px'}>
               {envs.map((env, index) => (
                 <Flex key={env.id} alignItems={'center'} _notLast={{ mb: 3 }}>
                   <Input
@@ -421,97 +518,15 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
 
         <Divider mt={6} mb={5} />
 
-        <Box>
-          <Flex mb={5} justifyContent={'space-between'}>
-            <strong>HPA (弹性伸缩)</strong>
-            <Switch
-              size={'lg'}
-              isChecked={getValues('hpa.use')}
-              {...register('hpa.use', {
-                onChange: () => {
-                  setForceUpdate(!forceUpdate);
-                }
-              })}
-            />
-          </Flex>
-          {getValues('hpa.use') && (
-            <Box width={'400px'}>
-              <Flex alignItems={'center'}>
-                <Select mr={5} placeholder="CPU目标值" {...register('hpa.target')}>
-                  <option value="cpu">CPU目标值</option>
-                </Select>
-                <Input
-                  type={'number'}
-                  mr={2}
-                  {...register('hpa.value', {
-                    required: 'cpu目标值为空',
-                    valueAsNumber: true,
-                    min: {
-                      value: 1,
-                      message: 'cpu目标值需为正数'
-                    }
-                  })}
-                />
-                <Box>%</Box>
-              </Flex>
-
-              <FormControl mt={5}>
-                <Flex alignItems={'center'}>
-                  <Box mr={5} flexShrink={0}>
-                    副本数
-                  </Box>
-                  <NumberInput>
-                    <NumberInputField
-                      {...register('hpa.minReplicas', {
-                        required: '副本下限不能为空',
-                        valueAsNumber: true,
-                        min: {
-                          value: 1,
-                          message: '副本下限需为正数'
-                        }
-                      })}
-                    />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                  <Box ml={2} mr={2} fontWeight={'bold'}>
-                    ~
-                  </Box>
-                  <NumberInput>
-                    <NumberInputField
-                      {...register('hpa.maxReplicas', {
-                        required: '副本上限不能为空',
-                        valueAsNumber: true,
-                        min: {
-                          value: 1,
-                          message: '副本上限需为正数'
-                        }
-                      })}
-                    />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </Flex>
-              </FormControl>
-            </Box>
-          )}
-        </Box>
-
-        <Divider mt={6} mb={5} />
-
-        <Accordion defaultIndex={[0]} p={0} allowToggle>
-          <AccordionItem border={'none'} p={0}>
+        <Accordion defaultIndex={[0]} allowToggle>
+          <AccordionItem border={'none'}>
             <AccordionButton p={'10px 0'}>
               <Box as="span" flex="1" textAlign="left" fontWeight={'bold'}>
                 Configmap 配置文件
               </Box>
               <AccordionIcon />
             </AccordionButton>
-            <AccordionPanel p={'10px 0'} w={'350px'}>
+            <AccordionPanel w={'350px'}>
               {configMaps.map((item, index) => (
                 <Box key={item.id} _notLast={{ mb: 5 }}>
                   <Flex alignItems={'center'} mb={2}>

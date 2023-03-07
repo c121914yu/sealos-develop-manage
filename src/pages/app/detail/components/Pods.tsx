@@ -34,11 +34,6 @@ const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean
       dataIndex: 'podName'
     },
     {
-      title: '角色',
-      key: 'rule',
-      dataIndex: 'rule'
-    },
-    {
       title: '节点',
       key: 'nodeName',
       dataIndex: 'nodeName'

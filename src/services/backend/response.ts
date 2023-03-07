@@ -14,12 +14,12 @@ export const jsonRes = (
   let msg = message;
   if ((code < 200 || code >= 400) && !message) {
     msg = typeof error === 'string' ? error : error?.message || error?.body.message || '请求错误';
-
+    // console.error(error)
     console.log(msg);
   }
   res.json({
     code,
     message: msg,
-    data
+    data: data || error
   });
 };

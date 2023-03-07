@@ -36,16 +36,15 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
 
 export const adaptPod = (pod: ResponseAppPodType): PodDetailType => {
   return {
-    podName: pod.metadata?.name || '无法获取pod name',
+    podName: pod.metadata?.name || 'pod name',
     // @ts-ignore
     status: podStatusMap[pod.status?.phase] || podStatusMap.Failed,
-    rule: 'test',
-    nodeName: pod.spec?.nodeName || '无法获取pod nodeName',
-    ip: pod.status?.podIP || '无法获取pod ip',
+    nodeName: pod.spec?.nodeName || 'node name',
+    ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses ? pod.status?.containerStatuses[0].restartCount : 0,
     age: formatPodTime(pod.metadata?.creationTimestamp || new Date()),
-    cpu: cpuFormatToM(pod.metrics.containers[0].usage.cpu),
-    memory: memoryFormatToMi(pod.metrics.containers[0].usage.memory)
+    cpu: pod.metrics ? cpuFormatToM(pod.metrics.containers[0].usage.cpu) : 0,
+    memory: pod.metrics ? memoryFormatToMi(pod.metrics.containers[0].usage.memory) : 0
   };
 };
 
@@ -67,7 +66,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     [YamlKindEnum.HorizontalPodAutoscaler]?: V1HorizontalPodAutoscaler;
     [YamlKindEnum.Secret]?: V1Secret;
   } = {};
-  console.log(configs);
+
   configs.forEach((item) => {
     if (item.kind) {
       // @ts-ignore
