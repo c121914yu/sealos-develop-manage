@@ -174,19 +174,19 @@ export const json2ConfigMap = (data: AppEditType) => {
     configFile[item.mountPath] = item.value;
   });
 
-  const template = data.configMapList.map((_, index) => ({
+  const template = {
     apiVersion: 'v1',
     kind: 'ConfigMap',
     metadata: {
-      name: `${data.appName}${index}`,
+      name: data.appName,
       labels: {
         'cloud.sealos.io/appname': data.appName
       }
     },
     data: configFile
-  }));
+  };
 
-  return template.map((item) => yaml.dump(item)).join('\n---\n');
+  return yaml.dump(template);
 };
 
 export const json2Secret = (data: AppEditType) => {
@@ -232,8 +232,8 @@ export const json2HPA = (data: AppEditType) => {
         kind: 'Deployment',
         name: data.appName
       },
-      minReplicas: data.hpa?.livesAmountStart,
-      maxReplicas: data.hpa?.livesAmountEnd,
+      minReplicas: data.hpa?.minReplicas,
+      maxReplicas: data.hpa?.maxReplicas,
       metrics: [
         {
           type: 'Resource',

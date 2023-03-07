@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Router from 'next/router';
 import NProgress from 'nprogress'; //nprogress module
 import { sealosApp, createSealosApp } from 'sealos-desktop-sdk';
+import { useConfirm } from '@/hooks/useConfirm';
 import 'nprogress/nprogress.css';
 import '@/styles/reset.scss';
 
@@ -27,6 +28,10 @@ const queryClient = new QueryClient({
 });
 
 export default function App({ Component, pageProps }: AppProps) {
+  const { openConfirm, ConfirmChild } = useConfirm({
+    title: '跳转提示',
+    content: '该应用不允许单独使用，点击确认前往 Sealos Desktop 使用。'
+  });
   useEffect(() => {
     NProgress.start();
     const response = createSealosApp({
@@ -34,9 +39,16 @@ export default function App({ Component, pageProps }: AppProps) {
     });
 
     (async () => {
-      const res = await sealosApp.getUserInfo();
-      localStorage.setItem('session', JSON.stringify(res));
-      console.log('init app success');
+      try {
+        const res = await sealosApp.getUserInfo();
+        localStorage.setItem('session', JSON.stringify(res));
+        console.log('init app success');
+      } catch (err) {
+        console.log('出错了');
+        openConfirm(() => {
+          window.open('https://cloud.sealos.io', '_self');
+        })();
+      }
     })();
     NProgress.done();
 
@@ -55,6 +67,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <QueryClientProvider client={queryClient}>
         <ChakraProvider theme={theme}>
           <Component {...pageProps} />
+          <ConfirmChild />
         </ChakraProvider>
       </QueryClientProvider>
     </>

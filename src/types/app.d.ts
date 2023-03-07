@@ -62,10 +62,10 @@ export interface AppEditType {
   }[];
   hpa: {
     use: boolean;
-    target: string;
+    target: string | '';
     value: number | '';
-    livesAmountStart: number | '';
-    livesAmountEnd: number | '';
+    minReplicas: number | '';
+    maxReplicas: number | '';
   };
   configMapList: {
     mountPath: string;

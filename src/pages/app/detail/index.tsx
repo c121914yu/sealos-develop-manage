@@ -17,6 +17,7 @@ const AppDetail = () => {
 
   useQuery([name], () => (name ? setAppDetail(name) : null));
 
+  // interval get pods metrics
   useQuery(
     [appDetail?.appName],
     () => (appDetail?.appName ? updateAppMetrics(appDetail?.appName) : null),

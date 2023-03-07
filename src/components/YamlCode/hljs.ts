@@ -3,8 +3,10 @@ export const codeTheme = {
     display: 'block',
     overflowX: 'auto',
     padding: '0.5em',
-    color: '#2f3337',
-    background: '#f6f6f6'
+    color: '#2f3337'
+  },
+  linenumber: {
+    minWidth: '2em'
   },
   'hljs-comment': {
     color: '#656e77'

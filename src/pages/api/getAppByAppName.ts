@@ -24,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       k8sCore.readNamespacedSecret(appName, namespace),
       k8sAutoscaling.readNamespacedHorizontalPodAutoscaler(appName, namespace)
     ]);
-
     jsonRes(res, {
       // @ts-ignore
       data: response.filter((item) => item.status === 'fulfilled').map((item) => item?.value?.body)

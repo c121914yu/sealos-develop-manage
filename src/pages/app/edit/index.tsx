@@ -79,7 +79,7 @@ const EditApp = () => {
           ...(data.hpa.use
             ? [
                 {
-                  filename: 'hpd.yaml',
+                  filename: 'hpa.yaml',
                   kind: 'HorizontalPodAutoscaler',
                   value: json2HPA(data)
                 }
@@ -150,7 +150,7 @@ const EditApp = () => {
 
   // default yaml
   useQuery(['initYaml'], () => {
-    return setYamlList([
+    setYamlList([
       {
         filename: 'service.yaml',
         kind: 'Service',
@@ -162,6 +162,7 @@ const EditApp = () => {
         value: json2Development(defaultEditVal)
       }
     ]);
+    return null;
   });
 
   useQuery(
@@ -197,8 +198,6 @@ const EditApp = () => {
           top={0}
           left={0}
           right={0}
-          backgroundColor="#fff"
-          zIndex={1}
         >
           <Flex alignItems={'center'} cursor={'pointer'} onClick={() => router.back()}>
             <Box>

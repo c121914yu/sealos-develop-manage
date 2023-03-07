@@ -38,10 +38,10 @@ export const defaultEditVal: AppEditType = {
   envs: [],
   hpa: {
     use: false,
-    target: '',
+    target: 'cpu',
     value: '',
-    livesAmountStart: '',
-    livesAmountEnd: ''
+    minReplicas: '',
+    maxReplicas: ''
   },
   configMapList: [{ mountPath: 'config.yaml', value: 'addr: :3000' }],
   secret: {

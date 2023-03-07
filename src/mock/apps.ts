@@ -272,8 +272,8 @@ export const MOCK_APP_DETAIL: AppDetailType = {
     use: true,
     target: '',
     value: '',
-    livesAmountStart: '',
-    livesAmountEnd: ''
+    minReplicas: '',
+    maxReplicas: ''
   },
   configMapList: [
     {

@@ -27,6 +27,9 @@ export const useAppStore = create<State>()(
         return res;
       },
       setAppDetail: async (appName: string) => {
+        set((state) => {
+          state.appDetail = undefined;
+        });
         const res = await getAppByName(appName);
         set((state) => {
           state.appDetail = res;

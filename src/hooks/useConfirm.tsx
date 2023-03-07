@@ -17,13 +17,16 @@ export const useConfirm = ({ title = '提示', content }: { title?: string; cont
   const cancelCb = useRef<any>();
 
   return {
-    openConfirm: (confirm?: any, cancel?: any) => {
-      return function () {
-        onOpen();
-        confirmCb.current = confirm;
-        cancelCb.current = cancel;
-      };
-    },
+    openConfirm: useCallback(
+      (confirm?: any, cancel?: any) => {
+        return function () {
+          onOpen();
+          confirmCb.current = confirm;
+          cancelCb.current = cancel;
+        };
+      },
+      [onOpen]
+    ),
     ConfirmChild: useCallback(
       () => (
         <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>

@@ -68,13 +68,10 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
     name: 'configMapList'
   });
 
-  const FormDom = useRef<HTMLFormElement>(null);
-
   return (
     <Box
       className={styles.codeBox}
       height={'100%'}
-      p={5}
       overflow="auto"
       boxShadow={'base'}
       borderRadius={'md'}
@@ -83,7 +80,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
         <strong>*基础配置</strong>
       </Box>
 
-      <form ref={FormDom}>
+      <Box p={4}>
         <FormControl mb={5} isInvalid={!!errors.appName}>
           <Flex alignItems={'center'}>
             <Box flex={'0 0 80px'}>应用名称</Box>
@@ -202,6 +199,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               type={'number'}
               flex={'0 0 100px'}
               {...register('replicas', {
+                required: '副本数不能为空',
                 valueAsNumber: true,
                 min: {
                   value: 1,
@@ -218,6 +216,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               type={'number'}
               flex={'0 0 90px'}
               {...register('cpu', {
+                required: 'CPU 基准值不能为空',
                 valueAsNumber: true,
                 min: {
                   value: 1,
@@ -234,6 +233,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               type={'number'}
               flex={'0 0 90px'}
               {...register('memory', {
+                required: 'Memory 不能为空',
                 valueAsNumber: true,
                 min: {
                   value: 1,
@@ -252,6 +252,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
               type={'number'}
               maxW={'230px'}
               {...register('containerOutPort', {
+                required: '容器暴露端口不能为空',
                 valueAsNumber: true,
                 min: {
                   value: 1,
@@ -436,7 +437,9 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
           {getValues('hpa.use') && (
             <Box width={'400px'}>
               <Flex alignItems={'center'}>
-                <Select mr={5} placeholder="CPU目标值" {...register('hpa.target')}></Select>
+                <Select mr={5} placeholder="CPU目标值" {...register('hpa.target')}>
+                  <option value="cpu">CPU目标值</option>
+                </Select>
                 <Input
                   type={'number'}
                   mr={2}
@@ -459,8 +462,8 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
                   </Box>
                   <NumberInput>
                     <NumberInputField
-                      {...register('hpa.livesAmountStart', {
-                        required: '副本下限为空',
+                      {...register('hpa.minReplicas', {
+                        required: '副本下限不能为空',
                         valueAsNumber: true,
                         min: {
                           value: 1,
@@ -478,8 +481,8 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
                   </Box>
                   <NumberInput>
                     <NumberInputField
-                      {...register('hpa.livesAmountEnd', {
-                        required: '副本上限为空',
+                      {...register('hpa.maxReplicas', {
+                        required: '副本上限不能为空',
                         valueAsNumber: true,
                         min: {
                           value: 1,
@@ -549,7 +552,7 @@ const Form = ({ formHook }: { formHook?: UseFormReturn<AppEditType, any> }) => {
         </Accordion>
 
         <Divider mt={6} mb={5} />
-      </form>
+      </Box>
     </Box>
   );
 };

@@ -67,7 +67,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     [YamlKindEnum.HorizontalPodAutoscaler]?: V1HorizontalPodAutoscaler;
     [YamlKindEnum.Secret]?: V1Secret;
   } = {};
-
+  console.log(configs);
   configs.forEach((item) => {
     if (item.kind) {
       // @ts-ignore
@@ -124,7 +124,15 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
         key: env.name,
         value: env.value || ''
       })) || [],
-    hpa: defaultEditVal.hpa,
+    hpa: deployKindsMap.HorizontalPodAutoscaler?.spec
+      ? {
+          use: true,
+          target: 'cpu',
+          value: deployKindsMap.HorizontalPodAutoscaler.spec.targetCPUUtilizationPercentage || '',
+          minReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.minReplicas || '',
+          maxReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.maxReplicas || ''
+        }
+      : defaultEditVal.hpa,
     configMapList: deployKindsMap.ConfigMap?.data
       ? Object.entries(deployKindsMap.ConfigMap.data).map(([key, value]) => ({
           mountPath: key,
@@ -161,7 +169,6 @@ export const adaptEditAppData = (app: AppDetailType): AppEditType => {
   keys.forEach((key) => {
     res[key] = app[key];
   });
-
   return res as AppEditType;
 };
 
@@ -223,8 +230,8 @@ export const adaptYamlToEdit = (yamlList: string[]) => {
           use: true,
           target: 'cpu',
           value: '',
-          livesAmountStart: deployKindsMap.HorizontalPodAutoscaler.spec?.maxReplicas,
-          livesAmountEnd: deployKindsMap.HorizontalPodAutoscaler.spec?.minReplicas
+          minReplicas: deployKindsMap.HorizontalPodAutoscaler.spec?.maxReplicas,
+          maxReplicas: deployKindsMap.HorizontalPodAutoscaler.spec?.minReplicas
         }
       : undefined,
     configMapList: deployKindsMap?.ConfigMap?.data

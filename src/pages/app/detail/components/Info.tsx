@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Card, Box, Flex, Grid } from '@chakra-ui/react';
+import { Box, Flex, Grid } from '@chakra-ui/react';
 import type { AppDetailType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
 import { useCopyData } from '@/utils/tools';
@@ -14,7 +14,7 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
       items?: {
         label?: string;
         value?: string;
-        copy?: boolean;
+        copy?: string;
         render?: () => JSX.Element;
       }[];
     }[]
@@ -75,7 +75,9 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
                 value:
                   app.accessExternal.selfDomain ||
                   `${app.accessExternal.outDomain}.cloud.sealos.io`,
-                copy: true
+                copy:
+                  app.accessExternal.selfDomain ||
+                  `https://${app.accessExternal.outDomain}.cloud.sealos.io`
               },
               { label: 'IP', value: 'test' }
             ]
@@ -96,7 +98,7 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
         items: app.hpa.use
           ? [
               { label: app.hpa.target, value: `${app.hpa.value}%` },
-              { label: '副本数', value: `${app.hpa.livesAmountStart} ~ ${app.hpa.livesAmountEnd}` }
+              { label: '副本数', value: `${app.hpa.minReplicas} ~ ${app.hpa.maxReplicas}` }
             ]
           : undefined
       }
@@ -105,7 +107,7 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
   );
 
   return (
-    <Card minH={'100%'} px={4} py={7}>
+    <Box minH={'100%'} px={4} py={7}>
       {appInfoTable.map((info) => (
         <Box
           _notFirst={{
@@ -141,7 +143,7 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
                           as="span"
                           title={item.value}
                           cursor={'default'}
-                          onClick={() => item.value && item.copy && copyData(item.value)}
+                          onClick={() => item.value && !!item.copy && copyData(item.copy)}
                         >
                           {item.value}
                         </Box>
@@ -154,7 +156,7 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
           </Box>
         </Box>
       ))}
-    </Card>
+    </Box>
   );
 };
 
