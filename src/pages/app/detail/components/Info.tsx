@@ -59,12 +59,22 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
         ]
       },
       {
+        name: 'HPA',
+        items: app.hpa.use
+          ? [
+              { label: `${app.hpa.target}基准`, value: `${app.hpa.value}%` },
+              { label: '副本数', value: `${app.hpa.minReplicas} ~ ${app.hpa.maxReplicas}` }
+            ]
+          : undefined
+      },
+      {
         name: '端口转发',
         items:
           app.servicePorts.length > 0
             ? app.servicePorts.map((port) => ({
-                label: ``,
-                value: `${port.start} => ${port.end}`
+                render: () => (
+                  <Box textAlign={'center'} w={'100%'}>{`${port.start} => ${port.end}`}</Box>
+                )
               }))
             : undefined
       },
@@ -92,15 +102,6 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
                 value: env.value
               }))
             : undefined
-      },
-      {
-        name: 'HPA',
-        items: app.hpa.use
-          ? [
-              { label: `${app.hpa.target}基准`, value: `${app.hpa.value}%` },
-              { label: '副本数', value: `${app.hpa.minReplicas} ~ ${app.hpa.maxReplicas}` }
-            ]
-          : undefined
       },
       {
         name: 'configMap',

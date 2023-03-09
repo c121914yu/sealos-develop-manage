@@ -25,14 +25,16 @@ const Logs = ({ podName, closeFn }: { podName: string; closeFn: () => void }) =>
       <ModalContent
         position={'relative'}
         minH={'200px'}
-        maxH={'60vh'}
         overflowY={'auto'}
-        top={'20%'}
+        top={'10%'}
+        maxW={'50vw'}
         whiteSpace={'pre-line'}
       >
         <ModalHeader>{podName} 日志</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>{logs}</ModalBody>
+        <ModalBody maxH={'50vh'} overflow={'auto'} whiteSpace={'pre-line'} wordBreak={'break-all'}>
+          {logs}
+        </ModalBody>
         <Loading loading={isLoading} fixed={false} />
       </ModalContent>
     </Modal>

@@ -4,16 +4,13 @@ import type {
   V1Service,
   V1Ingress,
   V1Secret,
-  V1HorizontalPodAutoscaler
+  V1HorizontalPodAutoscaler,
+  V1Pod,
+  SinglePodMetrics
 } from '@kubernetes/client-node';
 import dayjs from 'dayjs';
 import yaml from 'js-yaml';
-import type {
-  AppListItemType,
-  PodDetailType,
-  ResponseAppPodType,
-  AppDetailType
-} from '@/types/app';
+import type { AppListItemType, PodDetailType, AppDetailType, PodMetrics } from '@/types/app';
 import { appStatusMap, podStatusMap } from '@/constants/app';
 import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
@@ -34,7 +31,7 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
   };
 };
 
-export const adaptPod = (pod: ResponseAppPodType): PodDetailType => {
+export const adaptPod = (pod: V1Pod): PodDetailType => {
   return {
     podName: pod.metadata?.name || 'pod name',
     // @ts-ignore
@@ -43,8 +40,16 @@ export const adaptPod = (pod: ResponseAppPodType): PodDetailType => {
     ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses ? pod.status?.containerStatuses[0].restartCount : 0,
     age: formatPodTime(pod.metadata?.creationTimestamp || new Date()),
-    cpu: pod.metrics ? cpuFormatToM(pod.metrics.containers[0].usage.cpu) : 0,
-    memory: pod.metrics ? memoryFormatToMi(pod.metrics.containers[0].usage.memory) : 0
+    cpu: 0,
+    memory: 0
+  };
+};
+
+export const adaptMetrics = (metrics: SinglePodMetrics): PodMetrics => {
+  return {
+    podName: metrics.metadata.name,
+    cpu: cpuFormatToM(metrics?.containers?.[0]?.usage?.cpu),
+    memory: memoryFormatToMi(metrics?.containers?.[0]?.usage?.memory)
   };
 };
 

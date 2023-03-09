@@ -85,6 +85,16 @@ export async function ListCRD(
     .listNamespacedCustomObject(meta.group, meta.version, meta.namespace, meta.plural);
 }
 
+export async function DelYaml(client: k8s.KubernetesObjectApi, specs: k8s.KubernetesObject[]) {
+  for (const spec of specs) {
+    try {
+      await client.delete(spec);
+    } catch (error) {
+      error;
+    }
+  }
+}
+
 export async function ApplyYaml(
   kc: k8s.KubeConfig,
   spec_str: string
@@ -104,16 +114,26 @@ export async function ApplyYaml(
     try {
       // @ts-ignore
       await client.read(spec);
+      console.log('replace yaml: ', spec.kind);
       // update resource
       const response = await client.replace(spec);
       created.push(response.body);
     } catch (e: any) {
-      try {
-        // we did not get the resource, so it does not exist, so create it
-        const response = await client.create(spec);
-        created.push(response.body);
-      } catch (error: any) {
-        return Promise.reject(error.body);
+      // console.error(e?.body || e, "<=replace error")
+      // create new yaml
+      if (e?.body?.code && +e?.body?.code === 404) {
+        try {
+          console.log('create yaml: ', spec.kind);
+          const response = await client.create(spec);
+          created.push(response.body);
+        } catch (error: any) {
+          DelYaml(client, validSpecs);
+          // console.error(error, '<=create error')
+          return Promise.reject(error);
+        }
+      } else {
+        DelYaml(client, validSpecs);
+        return Promise.reject(e);
       }
     }
   }

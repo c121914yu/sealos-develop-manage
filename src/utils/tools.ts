@@ -32,6 +32,22 @@ export const useCopyData = () => {
 };
 
 /**
+ * format string to number or ''
+ */
+export const str2Num = (str?: string | number) => {
+  return !!str ? +str : '';
+};
+
+export const configPathFormat = (str: string) => {
+  if (str.startsWith('/')) return `.${str}`;
+  return `./${str}`;
+};
+export const configNameFormat = (str: string) => {
+  if (!str.startsWith('/')) return str.replace(/\./g, '-');
+  return str.substring(1).replace(/(\/|\.)/g, '-');
+};
+
+/**
  * read a file text content
  */
 export const reactLocalFileContent = (file: File) => {

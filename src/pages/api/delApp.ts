@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     /* delete all service */
-    await Promise.allSettled([
+    const response = await Promise.allSettled([
       k8sApp.deleteNamespacedDeployment(name as string, namespace), // delete deploy
       k8sCore.deleteNamespacedService(name as string, namespace), // delete service
       k8sCore.deleteNamespacedConfigMap(name as string, namespace), // delete configMap
@@ -26,9 +26,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       k8sAutoscaling.deleteNamespacedHorizontalPodAutoscaler(name as string, namespace) // delete HorizontalPodAutoscaler
     ]);
 
+    if (response.filter((item) => item.status === 'fulfilled').length === 0) {
+      return Promise.reject('Delete App Error');
+    }
+
     jsonRes(res);
   } catch (err: any) {
-    console.log(err, '== apply ==');
     jsonRes(res, {
       code: 500,
       error: err

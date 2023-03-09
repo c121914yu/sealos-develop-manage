@@ -6,13 +6,13 @@ import { useAppStore } from '@/store/app';
 import { useLoading } from '@/hooks/useLoading';
 
 export default function Home() {
-  const { appList, setAppList, updateAppMetrics } = useAppStore();
+  const { appList, setAppList, intervalLoadPods } = useAppStore();
   const { Loading } = useLoading();
   const { isLoading } = useQuery(['appListQuery'], setAppList);
 
   useQuery(
-    ['updateAppMetrics', appList.length],
-    () => appList.map((app) => updateAppMetrics(app.name)),
+    ['intervalLoadPods', appList.length],
+    () => appList.map((app) => intervalLoadPods(app.name)),
     {
       refetchOnMount: true,
       refetchInterval: 3000

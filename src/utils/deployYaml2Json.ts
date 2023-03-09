@@ -1,6 +1,6 @@
 import yaml from 'js-yaml';
 import type { AppEditType } from '@/types/app';
-import { strToBase4 } from '@/utils/tools';
+import { strToBase4, str2Num, configPathFormat, configNameFormat } from '@/utils/tools';
 
 export const json2Development = (data: AppEditType) => {
   const template = {
@@ -14,14 +14,18 @@ export const json2Development = (data: AppEditType) => {
       }
     },
     spec: {
-      replicas: data.replicas,
+      replicas: str2Num(data.replicas),
       selector: {
         matchLabels: {
           app: data.appName
         }
       },
       strategy: {
-        type: 'Recreate'
+        type: 'RollingUpdate',
+        rollingUpdate: {
+          maxUnavailable: 1,
+          maxSurge: 2
+        }
       },
       template: {
         metadata: {
@@ -42,50 +46,65 @@ export const json2Development = (data: AppEditType) => {
             {
               name: data.appName,
               image: data.imageName,
-              env: data.envs.map((env) => ({
-                name: env.key,
-                value: env.value
-              })),
+              env:
+                data.envs.length > 0
+                  ? data.envs.map((env) => ({
+                      name: env.key,
+                      value: env.value
+                    }))
+                  : [],
               resources: {
                 requests: {
-                  cpu: `${data.cpu}m`,
-                  memory: `${data.memory}Mi`
+                  cpu: `${str2Num(data.cpu)}m`,
+                  memory: `${str2Num(data.memory)}Mi`
                 },
                 limits: {
                   cpu: '30m',
                   memory: '300Mi'
                 }
               },
-              command: data.runCMD ? data.runCMD.split(' ') : [],
-              args: data.cmdParam ? data.cmdParam.split(' ') : [],
+              command: data.runCMD
+                ? data.runCMD
+                    .split(' ')
+                    .filter((item) => item)
+                    .map((item) => `${item}`)
+                : [],
+              args: data.cmdParam
+                ? data.cmdParam
+                    .split(' ')
+                    .filter((item) => item)
+                    .map((item) => `${item}`)
+                : [],
               ports: [
                 {
-                  containerPort: data.containerOutPort
+                  containerPort: str2Num(data.containerOutPort)
                 }
               ],
               imagePullPolicy: 'Always',
               volumeMounts:
                 data.configMapList.length > 0
-                  ? [
-                      {
-                        name: data.appName,
-                        mountPath: '/my-app',
-                        readOnly: false
-                      }
-                    ]
+                  ? data.configMapList.map((item) => ({
+                      name: configNameFormat(item.mountPath),
+                      mountPath: item.mountPath,
+                      subPath: configPathFormat(item.mountPath)
+                    }))
                   : undefined
             }
           ],
           volumes:
             data.configMapList.length > 0
-              ? [
-                  {
+              ? data.configMapList.map((item) => ({
+                  name: configNameFormat(item.mountPath),
+                  configMap: {
                     name: data.appName,
-                    configMap: {
-                      name: data.appName
-                    }
+                    items: [
+                      {
+                        key: configNameFormat(item.mountPath),
+                        path: configPathFormat(item.mountPath)
+                      }
+                    ]
                   }
-                ]
+                }))
               : undefined
         }
       }
@@ -114,7 +133,7 @@ export const json2Service = (data: AppEditType) => {
           }))
         : [
             {
-              port: data.containerOutPort
+              port: str2Num(data.containerOutPort)
             }
           ],
       selector: {
@@ -154,9 +173,11 @@ export const json2Ingress = (data: AppEditType) => {
                   service: {
                     name: data.appName,
                     port: {
-                      number: !!data.servicePorts?.[0]?.start
-                        ? data.servicePorts[0].start
-                        : data.containerOutPort
+                      number: str2Num(
+                        !!data.servicePorts?.[0]?.start
+                          ? data.servicePorts[0].start
+                          : data.containerOutPort
+                      )
                     }
                   }
                 }
@@ -181,7 +202,7 @@ export const json2ConfigMap = (data: AppEditType) => {
 
   const configFile: { [key: string]: string } = {};
   data.configMapList.forEach((item) => {
-    configFile[item.mountPath] = item.value;
+    configFile[configNameFormat(item.mountPath)] = item.value;
   });
 
   const template = {
@@ -242,20 +263,30 @@ export const json2HPA = (data: AppEditType) => {
         kind: 'Deployment',
         name: data.appName
       },
-      minReplicas: data.hpa?.minReplicas,
-      maxReplicas: data.hpa?.maxReplicas,
-      metrics: [
-        {
-          type: 'Resource',
-          resource: {
-            name: 'cpu',
-            target: {
-              type: 'Utilization',
-              averageUtilization: data.hpa?.value
+      minReplicas: str2Num(data.hpa?.minReplicas),
+      maxReplicas: str2Num(data.hpa?.maxReplicas),
+      targetCPUUtilizationPercentage: str2Num(data.hpa?.value),
+      behavior: {
+        scaleDown: {
+          policies: [
+            // 60 seconds
+            {
+              type: 'Pods',
+              value: 2,
+              periodSeconds: 60
             }
-          }
+          ]
+        },
+        scaleUp: {
+          policies: [
+            {
+              type: 'Pods',
+              value: 3,
+              periodSeconds: 60
+            }
+          ]
         }
-      ]
+      }
     }
   };
   return yaml.dump(template);

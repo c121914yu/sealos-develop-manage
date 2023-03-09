@@ -1,4 +1,5 @@
 import { NextApiResponse } from 'next';
+import { ERROR_TEXT } from '../error';
 
 export const jsonRes = (
   res: NextApiResponse,
@@ -13,9 +14,16 @@ export const jsonRes = (
 
   let msg = message;
   if ((code < 200 || code >= 400) && !message) {
-    msg = typeof error === 'string' ? error : error?.message || error?.body.message || '请求错误';
+    // console.error(error.body, '<= kubectl error')
+
+    msg = error?.message || error?.body.message || '请求错误';
+    if (typeof error === 'string') {
+      msg = error;
+    } else if (error?.code && error.code in ERROR_TEXT) {
+      msg = ERROR_TEXT[error.code];
+    }
     // console.error(error)
-    console.log(msg);
+    console.error(msg);
   }
   res.json({
     code,

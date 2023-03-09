@@ -133,7 +133,7 @@ spec:
 export const MOCK_PODS: PodDetailType[] = [
   {
     podName: '1',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -144,7 +144,7 @@ export const MOCK_PODS: PodDetailType[] = [
   },
   {
     podName: '2',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -155,7 +155,7 @@ export const MOCK_PODS: PodDetailType[] = [
   },
   {
     podName: '3',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -167,7 +167,7 @@ export const MOCK_PODS: PodDetailType[] = [
 
   {
     podName: '4',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -179,7 +179,7 @@ export const MOCK_PODS: PodDetailType[] = [
 
   {
     podName: '5',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -190,7 +190,7 @@ export const MOCK_PODS: PodDetailType[] = [
   },
   {
     podName: '6',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -201,7 +201,7 @@ export const MOCK_PODS: PodDetailType[] = [
   },
   {
     podName: '7',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -212,7 +212,7 @@ export const MOCK_PODS: PodDetailType[] = [
   },
   {
     podName: '8',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -224,7 +224,7 @@ export const MOCK_PODS: PodDetailType[] = [
 
   {
     podName: '9',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -236,7 +236,7 @@ export const MOCK_PODS: PodDetailType[] = [
 
   {
     podName: 'dafsdd2sgsd6gsdg',
-    rule: 'master',
+
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,

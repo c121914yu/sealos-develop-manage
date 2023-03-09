@@ -17,11 +17,6 @@ export type DeployKindsType =
   | V1Secret
   | V1HorizontalPodAutoscaler;
 
-export interface ResponseAppPodType extends V1Pod {
-  // api response pods
-  metrics?: SinglePodMetrics;
-}
-
 export interface AppStatusMapType {
   label: string;
   value: `${AppStatusEnum}`;
@@ -100,6 +95,11 @@ export interface PodDetailType {
   ip: string;
   restarts: number;
   age: string;
+  cpu: number;
+  memory: number;
+}
+export interface PodMetrics {
+  podName: string;
   cpu: number;
   memory: number;
 }

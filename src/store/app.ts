@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { AppListItemType, AppDetailType } from '@/types/app';
-import { getMyApps, getAppPodsByAppName, getAppByName } from '@/api/app';
+import { getMyApps, getAppPodsByAppName, getAppByName, getPodsMetrics } from '@/api/app';
 import { appStatusMap, PodStatusEnum } from '@/constants/app';
 
 type State = {
@@ -10,7 +10,7 @@ type State = {
   setAppList: () => Promise<AppListItemType[]>;
   appDetail?: AppDetailType;
   setAppDetail: (appName: string) => Promise<AppDetailType>;
-  updateAppMetrics: (appName: string) => Promise<string>;
+  intervalLoadPods: (appName: string) => Promise<string>;
 };
 
 export const useAppStore = create<State>()(
@@ -36,40 +36,53 @@ export const useAppStore = create<State>()(
         });
         return res;
       },
-      updateAppMetrics: async (appName: string) => {
-        if (!appName) return Promise.reject('no app name');
+      intervalLoadPods: async (appName: string) => {
+        if (!appName) return Promise.reject('app name is empty');
 
+        // get pod and update
         const pods = await getAppPodsByAppName(appName);
-        // compute average cpu and memory
-        const aveCpu = Number(pods.reduce((sum, item) => sum + item.cpu, 0).toFixed(1));
-        const aveMemory = Number(pods.reduce((sum, item) => sum + item.memory, 0).toFixed(1));
 
-        const app = {
-          aveCpu,
-          aveMemory,
-          pods
-        };
+        // one pod running, app is running
         const appStatus =
-          app.pods.filter((pod) => pod.status.value === PodStatusEnum.Running).length > 0
+          pods.filter((pod) => pod.status.value === PodStatusEnum.Running).length > 0
             ? appStatusMap.running
             : appStatusMap.waiting;
 
         set((state) => {
           // update app
           if (state?.appDetail?.appName === appName) {
-            state.appDetail.usedCpu = state.appDetail.usedCpu.slice(1).concat(app.aveCpu);
-            state.appDetail.usedMemory = state.appDetail.usedMemory.slice(1).concat(app.aveMemory);
-            state.appDetail.pods = app.pods;
             state.appDetail.status = appStatus;
+            state.appDetail.pods = pods;
           }
 
           //  update appList
           state.appList = state.appList.map((item) => ({
             ...item,
-            cpu: item.name === appName ? item.cpu.slice(1).concat(app.aveCpu) : item.cpu,
-            memory:
-              item.name === appName ? item.memory.slice(1).concat(app.aveMemory) : item.memory,
-            status: appStatus
+            status: item.name === appName ? appStatus : item.status
+          }));
+        });
+
+        // get metrics and update
+        const metrics = await getPodsMetrics(pods.map((pod) => pod.podName));
+        const aveCpu = Number(metrics.reduce((sum, item) => sum + item.cpu, 0).toFixed(1));
+        const aveMemory = Number(metrics.reduce((sum, item) => sum + item.memory, 0).toFixed(1));
+
+        set((state) => {
+          if (state?.appDetail?.appName === appName) {
+            state.appDetail.usedCpu = state.appDetail.usedCpu.slice(1).concat(aveCpu);
+            state.appDetail.usedMemory = state.appDetail.usedMemory.slice(1).concat(aveMemory);
+            state.appDetail.pods = pods.map((pod) => ({
+              ...pod,
+              cpu: metrics.find((item) => item.podName === pod.podName)?.cpu || pod.cpu,
+              memory: metrics.find((item) => item.podName === pod.podName)?.memory || pod.memory
+            }));
+          }
+
+          //  update appList
+          state.appList = state.appList.map((item) => ({
+            ...item,
+            cpu: item.name === appName ? item.cpu.slice(1).concat(aveCpu) : item.cpu,
+            memory: item.name === appName ? item.memory.slice(1).concat(aveMemory) : item.memory
           }));
         });
 

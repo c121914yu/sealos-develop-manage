@@ -124,7 +124,7 @@ const EditApp = () => {
           status: 'success'
         });
       } catch (error) {
-        setErrorMessage(String(error));
+        setErrorMessage(JSON.stringify(error));
       }
       setIsLoading(false);
     }, 500);
@@ -147,36 +147,36 @@ const EditApp = () => {
     });
   }, [formHook.formState.errors, toast]);
 
-  // default yaml
-  useQuery(['initYaml'], () => {
-    setYamlList([
-      {
-        filename: 'service.yaml',
-        kind: 'Service',
-        value: json2Service(defaultEditVal)
-      },
-      {
-        filename: 'deployment.yaml',
-        kind: 'Deployment',
-        value: json2Development(defaultEditVal)
-      }
-    ]);
-    return null;
-  });
-
   useQuery(
-    ['setAppDetail', name],
+    ['init', name],
     () => {
-      if (!name) return null;
+      if (!name) {
+        setYamlList([
+          {
+            filename: 'service.yaml',
+            kind: 'Service',
+            value: json2Service(defaultEditVal)
+          },
+          {
+            filename: 'deployment.yaml',
+            kind: 'Deployment',
+            value: json2Development(defaultEditVal)
+          }
+        ]);
+        return null;
+      }
       setIsLoading(true);
       return setAppDetail(name);
     },
     {
-      refetchOnMount: true,
       onSuccess(res) {
         res && formHook.reset(adaptEditAppData(res));
       },
-      onError() {
+      onError(err) {
+        toast({
+          title: String(err),
+          status: 'error'
+        });
         setIsLoading(false);
       },
       onSettled(data) {
@@ -187,7 +187,14 @@ const EditApp = () => {
 
   return (
     <>
-      <Flex flexDirection={'column'} alignItems={'center'} h={'100%'} minWidth={'1100px'} px={10}>
+      <Flex
+        flexDirection={'column'}
+        alignItems={'center'}
+        h={'100%'}
+        minWidth={'1100px'}
+        px={10}
+        backgroundColor={'#fff'}
+      >
         <Flex px={10} py={4} w={'100%'} alignItems={'center'} justifyContent={'space-between'}>
           <Flex alignItems={'center'} cursor={'pointer'} onClick={() => router.back()}>
             <Box>

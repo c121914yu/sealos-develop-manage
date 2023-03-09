@@ -94,6 +94,10 @@ table {
   overflow: hidden;
 }
 
+input::placeholder {
+  color: var(--chakra-colors-blackAlpha-400);
+}
+
 #__next {
   height: 100%;
 }

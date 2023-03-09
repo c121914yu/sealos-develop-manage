@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, ChangeEvent } from 'react';
-import { Box, Flex, Button, Input } from '@chakra-ui/react';
+import { Box, Flex, Button, Input, Grid } from '@chakra-ui/react';
 import Icon from '@/components/Icon';
 import YamlCode from '@/components/YamlCode/index';
 import styles from './index.module.scss';
@@ -101,10 +101,11 @@ const Yaml = ({
       </Flex>
 
       {/* filename list */}
-      <Flex w={'100%'} alignItems={'center'} flexWrap={'nowrap'} overflowX={'auto'}>
+      <Grid w={'100%'} mb={3} gridTemplateColumns={'repeat(3,1fr)'} textAlign={'center'}>
         {yamlList.map((file, index) => (
           <Box
-            py={'10px'}
+            flex={1}
+            pt={2}
             pr={5}
             key={file.kind}
             fontWeight={index === selectedIndex ? 'bold' : 'normal'}
@@ -115,7 +116,7 @@ const Yaml = ({
             {file.filename}
           </Box>
         ))}
-      </Flex>
+      </Grid>
 
       {/* file show */}
       {!!yamlList[selectedIndex] && (

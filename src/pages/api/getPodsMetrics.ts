@@ -9,28 +9,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   try {
     const session = await authSession(req.headers);
 
-    const { name } = req.query;
+    const { podsName } = req.body as { podsName: string[] };
 
-    if (!name) {
-      throw new Error('Name is empty');
+    if (!podsName) {
+      throw new Error('podsName is empty');
     }
 
-    const { k8sCore, namespace, metricsClient } = await getK8s({ kubeconfig: session.kubeconfig });
-
-    // get pods
-    const {
-      body: { items: pods }
-    } = await k8sCore.listNamespacedPod(
-      namespace,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      `app=${name}`
+    const { metricsClient, namespace } = await getK8s({ kubeconfig: session.kubeconfig });
+    // get these pods metrics
+    const metrics = await Promise.allSettled(
+      podsName.map((name) => metricsClient.getPodMetrics(namespace, name))
     );
-
     jsonRes(res, {
-      data: pods
+      // @ts-ignore
+      data: metrics.filter((item) => item.status === 'fulfilled').map((item) => item.value)
     });
   } catch (err: any) {
     // console.log(err, 'get metrics error')

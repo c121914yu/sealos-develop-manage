@@ -14,7 +14,7 @@ function Icon({ name, color = 'inherit', width = 16, height = 16, className = ''
   };
 
   return (
-    <svg className={`icon ${className}`} aria-hidden="true" style={style}>
+    <svg className={`icon ${className}`} style={style}>
       <use xlinkHref={`#${name}`}></use>
     </svg>
   );

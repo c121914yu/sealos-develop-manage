@@ -7,20 +7,29 @@ import Pods from './components/Pods';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/app';
 import { useScreen } from '@/hooks/useScreen';
+import { useToast } from '@/hooks/useToast';
 
 const AppDetail = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const { media } = useScreen();
   const { name } = router.query as { name?: string };
-  const { appDetail, setAppDetail, updateAppMetrics } = useAppStore();
+  const { appDetail, setAppDetail, intervalLoadPods } = useAppStore();
   const [podsLoaded, setPodsLoaded] = useState(false);
 
-  useQuery([name], () => (name ? setAppDetail(name) : null));
+  useQuery([name], () => (name ? setAppDetail(name) : null), {
+    onError(err) {
+      toast({
+        title: String(err),
+        status: 'error'
+      });
+    }
+  });
 
   // interval get pods metrics
   useQuery(
     [appDetail?.appName],
-    () => (appDetail?.appName ? updateAppMetrics(appDetail?.appName) : null),
+    () => (appDetail?.appName ? intervalLoadPods(appDetail?.appName) : null),
     {
       refetchInterval: 3000,
       onError() {
