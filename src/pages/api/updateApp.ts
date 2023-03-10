@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     const delArr = deleteArr.filter((item) => !kindList.includes(item.kind));
     await Promise.allSettled(delArr.map((item) => item.delApi()));
-    const applyRes = await applyYamlList(yamlList);
+    const applyRes = await applyYamlList(yamlList, 'replace');
 
     jsonRes(res, { data: applyRes });
   } catch (err: any) {

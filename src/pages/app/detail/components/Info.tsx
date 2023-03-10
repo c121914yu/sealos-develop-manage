@@ -5,7 +5,7 @@ import PodLineChart from '@/components/PodLineChart';
 import { useCopyData } from '@/utils/tools';
 import dayjs from 'dayjs';
 
-const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
+const AppDetailInfo = ({ app }: { app: AppDetailType }) => {
   if (!app) return null;
   const { copyData } = useCopyData();
 
@@ -118,7 +118,7 @@ const AppDetailInfo = ({ app }: { app?: AppDetailType }) => {
   );
 
   return (
-    <Box px={4} py={7}>
+    <Box px={4} py={7} position={'relative'}>
       {appInfoTable.map((info) => (
         <Box
           _notFirst={{

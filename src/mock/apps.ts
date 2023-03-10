@@ -263,11 +263,11 @@ export const MOCK_APP_DETAIL: AppDetailType = {
   servicePorts: [],
   accessExternal: {
     use: true,
+    backendProtocol: 'HTTP',
     outDomain: 'sadfsdaf',
     selfDomain: 'dafsd'
   },
   envs: [{ key: 'adsfda', value: 'sfaasd' }],
-  pods: MOCK_PODS,
   hpa: {
     use: true,
     target: '',

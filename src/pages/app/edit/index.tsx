@@ -27,13 +27,12 @@ import Form from './components/Form';
 import Yaml from './components/Yaml';
 const ErrorModal = dynamic(() => import('./components/ErrorModal'));
 
-const EditApp = () => {
+const EditApp = ({ appName }: { appName?: string }) => {
   const { toast } = useToast();
   const { Loading, setIsLoading } = useLoading();
   const router = useRouter();
-  const { name } = router.query as QueryType;
   const { setAppDetail } = useAppStore();
-  const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!name);
+  const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!appName);
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const { openConfirm, ConfirmChild } = useConfirm({
@@ -113,8 +112,8 @@ const EditApp = () => {
     setTimeout(async () => {
       try {
         const data = yamlList.map((item) => item.value);
-        if (name) {
-          await putApp(data, name);
+        if (appName) {
+          await putApp(data, appName);
         } else {
           await postDeployApp(data);
           router.push(`/apps`);
@@ -128,7 +127,7 @@ const EditApp = () => {
       }
       setIsLoading(false);
     }, 500);
-  }, [applySuccess, name, router, setIsLoading, toast, yamlList]);
+  }, [applySuccess, appName, router, setIsLoading, toast, yamlList]);
   const submitError = useCallback(() => {
     // deep search message
     const deepSearch = (obj: any): string => {
@@ -148,9 +147,9 @@ const EditApp = () => {
   }, [formHook.formState.errors, toast]);
 
   useQuery(
-    ['init', name],
+    ['init'],
     () => {
-      if (!name) {
+      if (!appName) {
         setYamlList([
           {
             filename: 'service.yaml',
@@ -166,7 +165,7 @@ const EditApp = () => {
         return null;
       }
       setIsLoading(true);
-      return setAppDetail(name);
+      return setAppDetail(appName);
     },
     {
       onSuccess(res) {
@@ -177,10 +176,9 @@ const EditApp = () => {
           title: String(err),
           status: 'error'
         });
-        setIsLoading(false);
       },
-      onSettled(data) {
-        data && setIsLoading(false);
+      onSettled() {
+        setIsLoading(false);
       }
     }
   );
@@ -236,3 +234,10 @@ const EditApp = () => {
 };
 
 export default EditApp;
+
+export async function getServerSideProps(context: any) {
+  const appName = context?.query?.name || '';
+  return {
+    props: { appName }
+  };
+}

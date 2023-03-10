@@ -433,6 +433,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                   if (!getValues('accessExternal.outDomain')) {
                     setValue('accessExternal', {
                       use: true,
+                      backendProtocol: 'HTTP',
                       outDomain: nanoid(),
                       selfDomain: ''
                     });
@@ -444,6 +445,15 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
           </Flex>
           {getValues('accessExternal.use') && (
             <Box w={'320px'}>
+              <FormControl mt={5}>
+                <Flex alignItems={'center'}>
+                  <Box flex={'0 0 80px'}>协议</Box>
+                  <Select flex={1} {...register('accessExternal.backendProtocol')}>
+                    <option value="HTTP">HTTP</option>
+                    <option value="GRPC">GRPC</option>
+                  </Select>
+                </Flex>
+              </FormControl>
               <FormControl mt={5}>
                 <Flex alignItems={'center'}>
                   <Box flex={'0 0 80px'}>出口域名</Box>
@@ -468,7 +478,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
         <Divider mt={6} mb={6} />
       </Box>
 
-      <Accordion defaultChecked={envs.length > 0} allowToggle>
+      <Accordion defaultIndex={0} allowToggle>
         <AccordionItem border={'none'}>
           <AccordionButton px={4}>
             <Box as="span" flex="1" textAlign="left" fontWeight={'bold'}>
@@ -516,7 +526,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
 
       <Divider mt={6} mb={5} />
 
-      <Accordion mb={4} defaultChecked={configMaps.length > 0} allowToggle>
+      <Accordion mb={4} allowToggle defaultIndex={0}>
         <AccordionItem border={'none'}>
           <AccordionButton px={4}>
             <Box as="span" flex="1" textAlign="left" fontWeight={'bold'}>
@@ -530,7 +540,9 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                 <Flex alignItems={'center'} mb={2}>
                   <Input
                     placeholder="文件名"
-                    {...register(`configMapList.${index}.mountPath`)}
+                    {...register(`configMapList.${index}.mountPath`, {
+                      required: '文件名不能为空'
+                    })}
                   ></Input>
                   <Box
                     className={styles.deleteIcon}
@@ -546,17 +558,18 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                   rows={4}
                   whiteSpace={'nowrap'}
                   placeholder="值"
-                  {...register(`configMapList.${index}.value`)}
+                  {...register(`configMapList.${index}.value`, {
+                    required: '文件内容不能为空'
+                  })}
                 ></Textarea>
               </Box>
             ))}
 
             <Button
               mt={3}
-              width="100%"
               onClick={() => appendConfigMaps({ mountPath: '', value: '' })}
               variant={'outline'}
-              w={'350px'}
+              w={'330px'}
             >
               <Icon name="icon-plus" color={'var(--chakra-colors-blue-500)'}></Icon>
               <Box ml={1}>新增 configmap</Box>

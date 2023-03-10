@@ -24,7 +24,7 @@ export const json2Development = (data: AppEditType) => {
         type: 'RollingUpdate',
         rollingUpdate: {
           maxUnavailable: 1,
-          maxSurge: 2
+          maxSurge: 1
         }
       },
       template: {
@@ -156,7 +156,7 @@ export const json2Ingress = (data: AppEditType) => {
       annotations: {
         'kubernetes.io/ingress.class': 'nginx',
         'nginx.ingress.kubernetes.io/ssl-redirect': 'false',
-        'nginx.ingress.kubernetes.io/backend-protocol': 'HTTP',
+        'nginx.ingress.kubernetes.io/backend-protocol': data.accessExternal.backendProtocol,
         'nginx.ingress.kubernetes.io/rewrite-target': '/$2'
       }
     },

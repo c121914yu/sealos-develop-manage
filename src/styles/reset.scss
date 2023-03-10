@@ -94,7 +94,8 @@ table {
   overflow: hidden;
 }
 
-input::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: var(--chakra-colors-blackAlpha-400);
 }
 

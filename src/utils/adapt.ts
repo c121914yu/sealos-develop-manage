@@ -116,6 +116,9 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     accessExternal: deployKindsMap.Ingress
       ? {
           use: true,
+          backendProtocol: deployKindsMap.Ingress.metadata?.annotations?.[
+            'nginx.ingress.kubernetes.io/backend-protocol'
+          ] as AppEditType['accessExternal']['backendProtocol'],
           outDomain: domain?.split('.')[0] || '',
           selfDomain: ''
         }
@@ -146,8 +149,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     secret: {
       ...defaultEditVal.secret,
       use: !!deployKindsMap.Secret?.data
-    },
-    pods: []
+    }
   };
 };
 

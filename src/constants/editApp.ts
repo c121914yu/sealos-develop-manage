@@ -32,6 +32,7 @@ export const defaultEditVal: AppEditType = {
   servicePorts: [],
   accessExternal: {
     use: false,
+    backendProtocol: 'HTTP',
     outDomain: '',
     selfDomain: ''
   },

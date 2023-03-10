@@ -1,7 +1,7 @@
 import * as k8s from '@kubernetes/client-node';
-import http from 'http';
 import * as yaml from 'js-yaml';
 
+/* init api */
 export function K8sApi(config: string): k8s.KubeConfig {
   const kc = new k8s.KubeConfig();
   kc.loadFromString(config);
@@ -11,6 +11,7 @@ export function K8sApi(config: string): k8s.KubeConfig {
     let server: k8s.Cluster;
 
     const [inCluster, hosts] = CheckIsInCluster();
+
     if (inCluster && hosts !== '') {
       server = {
         name: cluster.name,
@@ -39,16 +40,6 @@ export function K8sApi(config: string): k8s.KubeConfig {
   return kc;
 }
 
-export async function ListPods(
-  kc: k8s.KubeConfig,
-  ns: string
-): Promise<{
-  response: http.IncomingMessage;
-  body: k8s.V1PodList;
-}> {
-  return kc.makeApiClient(k8s.CoreV1Api).listNamespacedPod(ns);
-}
-
 export type CRDMeta = {
   group: string; // group
   version: string; // version
@@ -56,88 +47,83 @@ export type CRDMeta = {
   plural: string; // type
 };
 
-export async function GetCRD(
+export async function CreateYaml(
   kc: k8s.KubeConfig,
-  meta: CRDMeta,
-  name: string
-): Promise<{
-  response: http.IncomingMessage;
-  body: k8s.V1ResourceQuota;
-}> {
-  return kc.makeApiClient(k8s.CustomObjectsApi).getNamespacedCustomObject(
-    meta.group,
-    meta.version,
-    meta.namespace,
-    meta.plural,
-    name // resource name
-  );
-}
+  spec_str: string
+): Promise<k8s.KubernetesObject[]> {
+  const created = [] as k8s.KubernetesObject[];
+  const client = k8s.KubernetesObjectApi.makeApiClient(kc);
+  const specs = yaml.loadAll(spec_str) as k8s.KubernetesObject[];
+  const validSpecs = specs.filter((s) => s && s.kind && s.metadata);
 
-export async function ListCRD(
-  kc: k8s.KubeConfig,
-  meta: CRDMeta
-): Promise<{
-  response: http.IncomingMessage;
-  body: object;
-}> {
-  return kc
-    .makeApiClient(k8s.CustomObjectsApi)
-    .listNamespacedCustomObject(meta.group, meta.version, meta.namespace, meta.plural);
-}
+  try {
+    for (const spec of validSpecs) {
+      spec.metadata = spec.metadata || {};
+      spec.metadata.annotations = spec.metadata.annotations || {};
+      delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'];
+      spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] =
+        JSON.stringify(spec);
 
-export async function DelYaml(client: k8s.KubernetesObjectApi, specs: k8s.KubernetesObject[]) {
-  for (const spec of specs) {
-    try {
-      await client.delete(spec);
-    } catch (error) {
-      error;
+      console.log('create yaml: ', spec.kind);
+      const response = await client.create(spec);
+      created.push(response.body);
     }
+  } catch (error: any) {
+    /* delete success specs */
+    for (const spec of created) {
+      try {
+        client.delete(spec);
+      } catch (error) {
+        error;
+      }
+    }
+    // console.error(error, '<=create error')
+    return Promise.reject(error);
   }
+  return created;
 }
 
-export async function ApplyYaml(
+export async function replaceYaml(
   kc: k8s.KubeConfig,
   spec_str: string
 ): Promise<k8s.KubernetesObject[]> {
   const client = k8s.KubernetesObjectApi.makeApiClient(kc);
   const specs = yaml.loadAll(spec_str) as k8s.KubernetesObject[];
   const validSpecs = specs.filter((s) => s && s.kind && s.metadata);
-  const created = [] as k8s.KubernetesObject[];
+  const succeed = [] as k8s.KubernetesObject[];
+
   for (const spec of validSpecs) {
-    // this is to convince the old version of TypeScript that metadata exists even though we already filtered specs
-    // without metadata out
     spec.metadata = spec.metadata || {};
     spec.metadata.annotations = spec.metadata.annotations || {};
     delete spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'];
     spec.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'] =
       JSON.stringify(spec);
+
     try {
       // @ts-ignore
       await client.read(spec);
       console.log('replace yaml: ', spec.kind);
       // update resource
       const response = await client.replace(spec);
-      created.push(response.body);
+      succeed.push(response.body);
     } catch (e: any) {
       // console.error(e?.body || e, "<=replace error")
-      // create new yaml
+      // no yaml, create it
       if (e?.body?.code && +e?.body?.code === 404) {
         try {
           console.log('create yaml: ', spec.kind);
           const response = await client.create(spec);
-          created.push(response.body);
+          succeed.push(response.body);
         } catch (error: any) {
-          DelYaml(client, validSpecs);
           // console.error(error, '<=create error')
           return Promise.reject(error);
         }
       } else {
-        DelYaml(client, validSpecs);
         return Promise.reject(e);
       }
     }
   }
-  return created;
+  return succeed;
 }
 
 export function CheckIsInCluster(): [boolean, string] {
@@ -159,89 +145,6 @@ export function GetUserDefaultNameSpace(user: string): string {
   return 'ns-' + user;
 }
 
-export async function DeleteCRD(
-  kc: k8s.KubeConfig,
-  meta: CRDMeta,
-  name: string
-): Promise<{
-  response: http.IncomingMessage;
-  body: k8s.V1ResourceQuota;
-}> {
-  return kc.makeApiClient(k8s.CustomObjectsApi).deleteNamespacedCustomObject(
-    meta.group,
-    meta.version,
-    meta.namespace,
-    meta.plural,
-    name // resource name
-  );
-}
-
-export async function UpdateCRD(
-  kc: k8s.KubeConfig,
-  meta: CRDMeta,
-  name: string,
-  patch: any[]
-): Promise<{
-  response: http.IncomingMessage;
-  body: k8s.V1ResourceQuota;
-}> {
-  const options = { headers: { 'Content-type': k8s.PatchUtils.PATCH_FORMAT_JSON_PATCH } };
-
-  return kc.makeApiClient(k8s.CustomObjectsApi).patchNamespacedCustomObject(
-    meta.group,
-    meta.version,
-    meta.namespace,
-    meta.plural,
-    name, // resource name
-    patch, // json patch
-    undefined,
-    undefined,
-    undefined,
-    options
-  );
-}
-
-export async function ListClusterObject(
-  kc: k8s.KubeConfig,
-  meta: CRDMeta,
-  labelSelector: string,
-  limit: number,
-  _continue: string
-): Promise<{
-  response: http.IncomingMessage;
-  body: object;
-}> {
-  return kc
-    .makeApiClient(k8s.CustomObjectsApi)
-    .listClusterCustomObject(
-      meta.group,
-      meta.version,
-      meta.plural,
-      undefined,
-      undefined,
-      _continue,
-      undefined,
-      labelSelector,
-      limit
-    );
-}
-
-export async function GetClusterObject(
-  kc: k8s.KubeConfig,
-  meta: CRDMeta,
-  name: string
-): Promise<{
-  response: http.IncomingMessage;
-  body: k8s.V1ResourceQuota;
-}> {
-  return kc.makeApiClient(k8s.CustomObjectsApi).getClusterCustomObject(
-    meta.group,
-    meta.version,
-    meta.plural,
-    name // resource name
-  );
-}
-
 export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
   const kc = K8sApi(kubeconfig);
   const kube_user = kc.getCurrentUser();
@@ -251,7 +154,7 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
 
   const namespace = GetUserDefaultNameSpace(kube_user.name);
 
-  const applyYamlList = async (yamlList: string[]) => {
+  const applyYamlList = async (yamlList: string[], type: 'create' | 'replace') => {
     // insert namespace
     const formatYaml = yamlList
       .map((item) => yaml.load(item))
@@ -266,7 +169,12 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
     // merge yaml lsit
     const mergeYaml = formatYaml.join('\n---\n');
     // return mergeYaml
-    return ApplyYaml(kc, mergeYaml);
+    if (type === 'create') {
+      return CreateYaml(kc, mergeYaml);
+    } else if (type === 'replace') {
+      return replaceYaml(kc, mergeYaml);
+    }
+    return CreateYaml(kc, mergeYaml);
   };
 
   return Promise.resolve({

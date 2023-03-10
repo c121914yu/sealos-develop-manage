@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box, Flex, Card } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
 import Header from './components/Header';
 import Info from './components/Info';
 import Pods from './components/Pods';
@@ -8,16 +7,16 @@ import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/app';
 import { useScreen } from '@/hooks/useScreen';
 import { useToast } from '@/hooks/useToast';
+import { useLoading } from '@/hooks/useLoading';
 
-const AppDetail = () => {
-  const router = useRouter();
+const AppDetail = ({ appName }: { appName: string }) => {
   const { toast } = useToast();
+  const { Loading } = useLoading();
   const { media } = useScreen();
-  const { name } = router.query as { name?: string };
-  const { appDetail, setAppDetail, intervalLoadPods } = useAppStore();
+  const { appDetail, setAppDetail, appDetailPods, intervalLoadPods } = useAppStore();
   const [podsLoaded, setPodsLoaded] = useState(false);
 
-  useQuery([name], () => (name ? setAppDetail(name) : null), {
+  useQuery(['setAppDetail'], () => setAppDetail(appName), {
     onError(err) {
       toast({
         title: String(err),
@@ -27,21 +26,13 @@ const AppDetail = () => {
   });
 
   // interval get pods metrics
-  useQuery(
-    [appDetail?.appName],
-    () => (appDetail?.appName ? intervalLoadPods(appDetail?.appName) : null),
-    {
-      refetchInterval: 3000,
-      onError() {
-        setPodsLoaded(true);
-      },
-      onSettled(data) {
-        if (data === 'finish') {
-          setPodsLoaded(true);
-        }
-      }
+  useQuery(['intervalLoadPods'], () => intervalLoadPods(appName), {
+    refetchOnMount: true,
+    refetchInterval: 3000,
+    onSettled() {
+      setPodsLoaded(true);
     }
-  );
+  });
 
   return (
     <Flex flexDirection={'column'} height={'100vh'} backgroundColor={'#f9f9f9'} px={4} pb={4}>
@@ -65,11 +56,11 @@ const AppDetail = () => {
             }
           )}
         >
-          <Info app={appDetail} />
+          {appDetail ? <Info app={appDetail} /> : <Loading loading={true} fixed={false} />}
         </Card>
 
         <Card h={'100%'} flex={'1 0 0'} w={0} overflowY={'auto'}>
-          <Pods pods={appDetail?.pods} loading={!podsLoaded} />
+          <Pods pods={appDetailPods} loading={!podsLoaded} />
         </Card>
       </Flex>
     </Flex>
@@ -77,3 +68,11 @@ const AppDetail = () => {
 };
 
 export default AppDetail;
+
+export async function getServerSideProps(context: any) {
+  const appName = context.query?.name || '';
+
+  return {
+    props: { appName }
+  };
+}

@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     const { applyYamlList } = await getK8s({ kubeconfig: session.kubeconfig });
 
-    const applyRes = await applyYamlList(yamlList);
+    const applyRes = await applyYamlList(yamlList, 'create');
 
     jsonRes(res, { data: applyRes });
   } catch (err: any) {

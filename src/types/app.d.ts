@@ -48,6 +48,7 @@ export interface AppEditType {
   }[];
   accessExternal: {
     use: boolean;
+    backendProtocol: 'HTTP' | 'GRPC';
     outDomain: string;
     selfDomain: string;
   };
@@ -80,7 +81,7 @@ export interface AppDetailType extends AppEditType {
   imageName: string;
   usedCpu: number[];
   usedMemory: number[];
-  pods: PodDetailType[];
+  // pods: PodDetailType[];
 }
 
 export interface PodStatusMapType {

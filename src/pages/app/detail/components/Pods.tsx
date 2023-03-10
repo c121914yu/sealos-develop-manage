@@ -18,7 +18,7 @@ import { useLoading } from '@/hooks/useLoading';
 
 const Logs = dynamic(() => import('./Logs'));
 
-const Pods = ({ pods = [], loading }: { pods?: PodDetailType[]; loading: boolean }) => {
+const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean }) => {
   const [logsPod, setLogsPod] = useState<string>();
   const { Loading } = useLoading();
   const columns: {

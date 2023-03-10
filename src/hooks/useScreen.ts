@@ -4,7 +4,7 @@ import { useMediaQuery } from '@chakra-ui/react';
 export function useScreen() {
   const [isPc] = useMediaQuery('(min-width: 900px)', {
     ssr: true,
-    fallback: false
+    fallback: true
   });
 
   return {
