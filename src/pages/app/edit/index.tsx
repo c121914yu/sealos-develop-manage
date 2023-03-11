@@ -123,6 +123,7 @@ const EditApp = ({ appName }: { appName?: string }) => {
           status: 'success'
         });
       } catch (error) {
+        console.error(error);
         setErrorMessage(JSON.stringify(error));
       }
       setIsLoading(false);

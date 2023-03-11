@@ -62,16 +62,15 @@ request.interceptors.request.use(
     if (config.url && !config.url?.startsWith('/api/')) {
       config.url = '' + config.url;
     }
-
     let _headers: AxiosHeaders = config.headers;
     //获取token，并将其添加至请求头中
     // if (MOCK_SESSION) {
     //   _headers['Authorization'] = JSON.stringify(MOCK_SESSION)
     // }
-
     const session = localStorage.getItem('session');
-    _headers['Authorization'] = session || process.env.NEXT_PUBLIC_MOCK_USER;
-
+    _headers['Authorization'] = encodeURIComponent(
+      session || process.env.NEXT_PUBLIC_MOCK_USER || ''
+    );
     if (!config.headers || config.headers['Content-Type'] === '') {
       _headers['Content-Type'] = 'application/json';
     }
@@ -92,18 +91,12 @@ request.interceptors.response.use(
     const { status, data } = response;
     if (status < 200 || status >= 300 || !isApiResp(data)) {
       return Promise.reject(
-        new Error(
-          status + ':' + showStatus(status) + ', ' + typeof data === 'string'
-            ? data
-            : JSON.stringify(data)
-        )
+        status + ':' + showStatus(status) + ', ' + typeof data === 'string' ? data : String(data)
       );
     }
 
-    // UnWrap
     const apiResp = data as ApiResp;
-    const successfulCode = [200, 201];
-    if (!successfulCode.includes(apiResp.code)) {
+    if (apiResp.code < 200 || apiResp.code >= 400) {
       return Promise.reject(apiResp.code + ':' + apiResp.message);
     }
 
@@ -112,12 +105,9 @@ request.interceptors.response.use(
   },
   (error: any) => {
     if (axios.isCancel(error)) {
-      console.log('repeated request: ' + error.message);
+      return Promise.reject('cancel request' + String(error));
     } else {
-      // handle error code
-      // 错误抛到业务代码
-      error.data = {};
-      error.data.msg = '请求超时或服务器异常，请检查网络或联系管理员！';
+      error.errMessage = '请求超时或服务器异常，请检查网络或联系管理员！';
     }
     return Promise.reject(error);
   }

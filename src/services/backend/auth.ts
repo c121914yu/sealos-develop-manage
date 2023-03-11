@@ -7,7 +7,7 @@ export const authSession = async (header: IncomingHttpHeaders) => {
   if (!authorization) return Promise.reject('缺少凭证');
 
   try {
-    const session: Session = JSON.parse(authorization);
+    const session: Session = JSON.parse(decodeURIComponent(authorization));
     return Promise.resolve(session);
   } catch (err) {
     return Promise.reject('凭证错误');
