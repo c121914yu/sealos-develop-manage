@@ -17,10 +17,14 @@ export type DeployKindsType =
   | V1Secret
   | V1HorizontalPodAutoscaler;
 
+export type EditType = 'form' | 'yaml';
+
 export interface AppStatusMapType {
   label: string;
   value: `${AppStatusEnum}`;
   color: string;
+  backgroundColor: string;
+  dotColor: string;
 }
 
 export interface AppListItemType {

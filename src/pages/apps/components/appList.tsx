@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, TableContainer } from '@chakra-ui/react';
 import { AppListItemType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
+import AppStatusTag from '@/components/AppStatusTag';
 
 const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
   const columns: {
@@ -29,7 +30,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
     {
       title: '状态',
       key: 'status',
-      render: (item: AppListItemType) => <Box color={item.status.color}>{item.status.label}</Box>
+      render: (item: AppListItemType) => <AppStatusTag status={item.status} />
     },
     {
       title: '创建时间',

@@ -7,17 +7,23 @@ export const appStatusMap = {
   [AppStatusEnum.running]: {
     label: '运行中',
     value: AppStatusEnum.running,
-    color: 'blue.600'
+    color: '#1CA199',
+    backgroundColor: '#E5F6F5',
+    dotColor: '#1CA199'
   },
   [AppStatusEnum.waiting]: {
     label: '创建中',
     value: AppStatusEnum.waiting,
-    color: 'blackAlpha .600'
+    color: 'blackAlpha.600',
+    backgroundColor: 'blackAlpha.300',
+    dotColor: 'blackAlpha.800'
   },
   [AppStatusEnum.error]: {
     label: '错误',
     value: AppStatusEnum.error,
-    color: 'red.600'
+    color: 'red.600',
+    backgroundColor: 'red.300',
+    dotColor: 'red.800'
   }
 };
 

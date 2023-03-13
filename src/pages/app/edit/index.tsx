@@ -1,8 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { Box, Button, Flex, Grid } from '@chakra-ui/react';
-import Icon from '@/components/Icon';
-import type { YamlItemType, QueryType } from '@/types';
+import { Flex, Box } from '@chakra-ui/react';
+import type { YamlItemType } from '@/types';
 import {
   json2Development,
   json2Service,
@@ -16,21 +15,23 @@ import { defaultEditVal, editModeMap } from '@/constants/editApp';
 import debounce from 'lodash/debounce';
 import { postDeployApp, putApp } from '@/api/app';
 import { useConfirm } from '@/hooks/useConfirm';
-import type { AppEditType } from '@/types/app';
+import type { AppEditType, EditType } from '@/types/app';
 import { adaptEditAppData } from '@/utils/adapt';
 import { useToast } from '@/hooks/useToast';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/app';
 import { useLoading } from '@/hooks/useLoading';
-import dynamic from 'next/dynamic';
+import Header from './components/Header';
 import Form from './components/Form';
 import Yaml from './components/Yaml';
+import dynamic from 'next/dynamic';
 const ErrorModal = dynamic(() => import('./components/ErrorModal'));
 
 const EditApp = ({ appName }: { appName?: string }) => {
   const { toast } = useToast();
   const { Loading, setIsLoading } = useLoading();
   const router = useRouter();
+  const [showType, setShowType] = useState<EditType>('form');
   const { setAppDetail } = useAppStore();
   const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!appName);
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
@@ -192,38 +193,22 @@ const EditApp = ({ appName }: { appName?: string }) => {
         h={'100%'}
         minWidth={'1100px'}
         px={10}
-        backgroundColor={'#fff'}
+        backgroundColor={'#FCFCFC'}
       >
-        <Flex px={10} py={4} w={'100%'} alignItems={'center'} justifyContent={'space-between'}>
-          <Flex alignItems={'center'} cursor={'pointer'} onClick={() => router.back()}>
-            <Box>
-              <Icon name="icon-left-arrow" />
-            </Box>
-            <Box ml={6} fontWeight={'bold'} color={'black'} fontSize={'xl'}>
-              {title}
-            </Box>
-          </Flex>
-          <Button
-            flex={'0 0 155px'}
-            colorScheme={'blue'}
-            onClick={formHook.handleSubmit(openConfirm(submitSuccess), submitError)}
-          >
-            {applyBtnText}
-          </Button>
-        </Flex>
-        <Grid
-          flex={'1 0 0'}
-          h={0}
-          w={'100%'}
-          maxWidth={'1200px'}
-          mb={10}
-          gridTemplateColumns={'1fr 480px'}
-          gap={20}
-          position="relative"
-        >
-          <Form formHook={formHook} />
-          <Yaml yamlList={yamlList} setValues={formHook.setValue} />
-        </Grid>
+        <Header
+          title={title}
+          applyBtnText={applyBtnText}
+          applyCb={() => formHook.handleSubmit(openConfirm(submitSuccess), submitError)()}
+          activeType={showType}
+          setActiveType={setShowType}
+        />
+        <Box flex={'1 0 0'} h={0} maxWidth={'1050px'} w={'100%'} py={4}>
+          {showType === 'form' ? (
+            <Form formHook={formHook} />
+          ) : (
+            <Yaml yamlList={yamlList} setValues={formHook.setValue} />
+          )}
+        </Box>
       </Flex>
       <ConfirmChild />
       <Loading />

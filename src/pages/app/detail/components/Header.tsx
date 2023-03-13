@@ -7,6 +7,7 @@ import { delAppByName, restartAppByName } from '@/api/app';
 import { useToast } from '@/hooks/useToast';
 import { useConfirm } from '@/hooks/useConfirm';
 import { AppStatusEnum, appStatusMap } from '@/constants/app';
+import AppStatusTag from '@/components/AppStatusTag';
 
 const Header = ({
   appName = 'app name',
@@ -72,10 +73,8 @@ const Header = ({
         {appName}
       </Box>
       <Icon name="icon-info"></Icon>
-      <Box flex={1}>
-        <Box ml={3} color={appStatus.color}>
-          {appStatus.label}
-        </Box>
+      <Box flex={1} ml={4}>
+        <AppStatusTag status={appStatus} />
       </Box>
       {/* btns */}
       <Button

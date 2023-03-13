@@ -27,7 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     jsonRes(res);
   } catch (err: any) {
-    console.log(err.body);
     jsonRes(res, {
       code: 500,
       error: err
