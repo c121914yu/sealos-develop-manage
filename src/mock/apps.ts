@@ -6,27 +6,39 @@ export const MOCK_APPS: AppListItemType[] = [
     name: 'string',
     status: appStatusMap.running,
     createTime: 'string',
-    cpu: [2, 1, 4, 1, 80, 50],
-    memory: [2, 1, 4, 1, 2, 20],
-    replicas: 2
+    cpu: 100,
+    memory: 100,
+    usedCpu: [2, 1, 4, 1, 80, 50],
+    useMemory: [2, 1, 4, 1, 2, 20],
+    activeReplicas: 1,
+    maxReplicas: 1,
+    minReplicas: 1
   },
   {
     id: 'string2',
     name: 'string',
     status: appStatusMap.running,
     createTime: 'string',
-    cpu: [2, 1, 4, 1, 2],
-    memory: [2, 1, 4, 1, 2],
-    replicas: 2
+    cpu: 100,
+    memory: 100,
+    usedCpu: [2, 1, 4, 1, 2],
+    useMemory: [2, 1, 4, 1, 2],
+    activeReplicas: 1,
+    maxReplicas: 1,
+    minReplicas: 1
   },
   {
     id: 'string3',
     name: 'string',
     status: appStatusMap.running,
     createTime: 'string',
-    cpu: [2, 1, 4, 1, 2],
-    memory: [2, 1, 4, 1, 2],
-    replicas: 2
+    cpu: 100,
+    memory: 100,
+    usedCpu: [2, 1, 4, 1, 2],
+    useMemory: [2, 1, 4, 1, 2],
+    activeReplicas: 1,
+    maxReplicas: 1,
+    minReplicas: 1
   }
 ];
 export const MOCK_NAMESPACE = 'ns-34dccadb-8e62-4205-8c1b-fc2dc146cd68';
@@ -139,8 +151,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
   {
     podName: '2',
@@ -150,8 +162,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
   {
     podName: '3',
@@ -161,8 +173,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
 
   {
@@ -173,8 +185,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
 
   {
@@ -185,8 +197,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
   {
     podName: '6',
@@ -196,8 +208,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
   {
     podName: '7',
@@ -207,8 +219,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
   {
     podName: '8',
@@ -218,8 +230,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
 
   {
@@ -230,8 +242,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   },
 
   {
@@ -242,8 +254,8 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: 323,
-    memory: 33
+    cpu: [323],
+    memory: [33]
   }
 ];
 
@@ -260,7 +272,6 @@ export const MOCK_APP_DETAIL: AppDetailType = {
   usedCpu: [10, 10, 10, 10, 10, 10],
   usedMemory: [21, 10, 10, 10, 10, 10],
   containerOutPort: 8000,
-  servicePorts: [],
   accessExternal: {
     use: true,
     backendProtocol: 'HTTP',
@@ -270,10 +281,10 @@ export const MOCK_APP_DETAIL: AppDetailType = {
   envs: [{ key: 'adsfda', value: 'sfaasd' }],
   hpa: {
     use: true,
-    target: '',
-    value: '',
-    minReplicas: '',
-    maxReplicas: ''
+    target: 'cpu',
+    value: 50,
+    minReplicas: 3,
+    maxReplicas: 10
   },
   configMapList: [
     {
@@ -286,5 +297,6 @@ export const MOCK_APP_DETAIL: AppDetailType = {
     username: 'string',
     password: 'string',
     serverAddress: 'string'
-  }
+  },
+  storeList: [{ path: '/data', value: 2 }]
 };

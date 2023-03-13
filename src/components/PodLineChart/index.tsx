@@ -1,17 +1,30 @@
 import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
+import { printMemory } from '@/utils/tools';
 
 const PodLineChart = ({
-  backgroundColor,
-  data,
-  formatter
+  type,
+  cpu = 1000000,
+  data
 }: {
-  backgroundColor: string;
+  type: 'cpu' | 'memory';
+  cpu?: number;
   data: number[];
-  formatter?: string;
 }) => {
   const Dom = useRef<HTMLDivElement>(null);
   const myChart = useRef<echarts.ECharts>();
+
+  const map = {
+    cpu: {
+      backgroundColor: '#c9f4e8',
+      formatter: (e: any) => `${((e[0].value / cpu) * 100).toFixed(2)}%`
+    },
+    memory: {
+      backgroundColor: '#c9d7f4',
+      formatter: (e: any) => printMemory(e[0].value)
+    }
+  };
+
   const option = useRef({
     xAxis: {
       type: 'category',
@@ -36,7 +49,7 @@ const PodLineChart = ({
       axisPointer: {
         type: 'line'
       },
-      formatter
+      formatter: map[type].formatter
     },
     series: [
       {
@@ -46,7 +59,7 @@ const PodLineChart = ({
         animationDuration: 300,
         animationEasingUpdate: 'linear',
         areaStyle: {
-          color: backgroundColor
+          color: map[type].backgroundColor
         },
         lineStyle: {
           color: '#5CB4F3'

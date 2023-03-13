@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Box, Flex, Card } from '@chakra-ui/react';
-import Header from './components/Header';
-import Info from './components/Info';
-import Pods from './components/Pods';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/store/app';
 import { useScreen } from '@/hooks/useScreen';
 import { useToast } from '@/hooks/useToast';
 import { useLoading } from '@/hooks/useLoading';
+import Header from './components/Header';
+import AppBaseInfo from './components/AppBaseInfo';
+import AppMainInfo from './components/AppMainInfo';
+import Pods from './components/Pods';
 
 const AppDetail = ({ appName }: { appName: string }) => {
   const { toast } = useToast();
@@ -37,13 +38,13 @@ const AppDetail = ({ appName }: { appName: string }) => {
   return (
     <Flex flexDirection={'column'} height={'100vh'} backgroundColor={'#f9f9f9'} px={4} pb={4}>
       <Box>
-        <Header appName={appDetail?.appName} appStatus={appDetail?.status} />
+        <Header appName={appName} appStatus={appDetail?.status} />
       </Box>
       <Flex position={'relative'} flex={'1 0 0'} h={0}>
         <Card
           h={'100%'}
-          flex={'0 0 300px'}
-          w={'300px'}
+          flex={'0 0 350px'}
+          w={0}
           mr={4}
           overflowY={'auto'}
           zIndex={1}
@@ -56,12 +57,16 @@ const AppDetail = ({ appName }: { appName: string }) => {
             }
           )}
         >
-          {appDetail ? <Info app={appDetail} /> : <Loading loading={true} fixed={false} />}
+          {appDetail ? <AppBaseInfo app={appDetail} /> : <Loading loading={true} fixed={false} />}
         </Card>
-
-        <Card h={'100%'} flex={'1 0 0'} w={0} overflowY={'auto'}>
-          <Pods pods={appDetailPods} loading={!podsLoaded} />
-        </Card>
+        <Flex flexDirection={'column'} h={'100%'} flex={'1 0 0'} w={0}>
+          <Card mb={4} minH={'250px'}>
+            {appDetail ? <AppMainInfo app={appDetail} /> : <Loading loading={true} fixed={false} />}
+          </Card>
+          <Card flex={'1 0 0'} h={0} overflowY={'auto'}>
+            <Pods pods={appDetailPods} loading={!podsLoaded} appCpu={appDetail?.cpu} />
+          </Card>
+        </Flex>
       </Flex>
     </Flex>
   );

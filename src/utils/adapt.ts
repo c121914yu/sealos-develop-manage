@@ -6,6 +6,7 @@ import type {
   V1Secret,
   V1HorizontalPodAutoscaler,
   V1Pod,
+  V1PersistentVolumeClaimList,
   SinglePodMetrics
 } from '@kubernetes/client-node';
 import dayjs from 'dayjs';
@@ -25,13 +26,20 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
         ? appStatusMap.running
         : appStatusMap.waiting,
     createTime: dayjs(app.metadata?.creationTimestamp).format('YYYY-MM-DD hh:mm'),
-    cpu: [0, 0, 0, 0, 0, 0],
-    memory: [0, 0, 0, 0, 0, 0],
-    replicas: app.spec?.replicas || 0
+    cpu: cpuFormatToM(app.spec?.template?.spec?.containers?.[0]?.resources?.limits?.cpu || '0'),
+    memory: memoryFormatToMi(
+      app.spec?.template?.spec?.containers?.[0]?.resources?.limits?.memory || '0'
+    ),
+    usedCpu: new Array(30).fill(0),
+    useMemory: new Array(30).fill(0),
+    activeReplicas: app.status?.readyReplicas || 0,
+    maxReplicas: +(app.metadata?.labels?.maxReplicas || app.status?.readyReplicas || 0),
+    minReplicas: +(app.metadata?.labels?.minReplicas || app.status?.readyReplicas || 0)
   };
 };
 
 export const adaptPod = (pod: V1Pod): PodDetailType => {
+  // console.log(pod);
   return {
     podName: pod.metadata?.name || 'pod name',
     // @ts-ignore
@@ -40,8 +48,8 @@ export const adaptPod = (pod: V1Pod): PodDetailType => {
     ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses ? pod.status?.containerStatuses[0].restartCount : 0,
     age: formatPodTime(pod.metadata?.creationTimestamp || new Date()),
-    cpu: 0,
-    memory: 0
+    cpu: new Array(30).fill(0),
+    memory: new Array(30).fill(0)
   };
 };
 
@@ -59,7 +67,8 @@ export enum YamlKindEnum {
   Deployment = 'Deployment',
   Ingress = 'Ingress',
   HorizontalPodAutoscaler = 'HorizontalPodAutoscaler',
-  Secret = 'Secret'
+  Secret = 'Secret',
+  PersistentVolumeClaim = 'PersistentVolumeClaim'
 }
 
 export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
@@ -70,8 +79,8 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     [YamlKindEnum.Ingress]?: V1Ingress;
     [YamlKindEnum.HorizontalPodAutoscaler]?: V1HorizontalPodAutoscaler;
     [YamlKindEnum.Secret]?: V1Secret;
+    [YamlKindEnum.PersistentVolumeClaim]?: { items: V1PersistentVolumeClaimList[] };
   } = {};
-
   configs.forEach((item) => {
     if (item.kind) {
       // @ts-ignore
@@ -91,28 +100,21 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
       'YYYY-MM-DD hh:mm'
     ),
     status: appStatusMap.running,
-    imageName: deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.image || '',
+    imageName: deployKindsMap.Deployment?.metadata?.annotations?.originImageName || '',
     runCMD:
       deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.command?.join(' ') || '',
     cmdParam:
       deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.args?.join(' ') || '',
     replicas: deployKindsMap.Deployment.spec?.replicas || 0,
     cpu: cpuFormatToM(
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.resources?.requests?.cpu ||
-        '0'
+      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.resources?.limits?.cpu || '0'
     ),
     memory: memoryFormatToMi(
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.resources?.requests
-        ?.memory || '0'
+      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.resources?.limits?.memory ||
+        '0'
     ),
-    usedCpu: [0, 0, 0, 0, 0, 0],
-    usedMemory: [0, 0, 0, 0, 0, 0],
-    servicePorts: deployKindsMap.Service?.spec?.ports?.[0]?.targetPort
-      ? deployKindsMap.Service?.spec?.ports.map((port) => ({
-          start: port.port || 3000,
-          end: Number(port.targetPort) || 3000
-        }))
-      : [],
+    usedCpu: new Array(30).fill(0),
+    usedMemory: new Array(30).fill(0),
     accessExternal: deployKindsMap.Ingress
       ? {
           use: true,
@@ -135,21 +137,32 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
       ? {
           use: true,
           target: 'cpu',
-          value: deployKindsMap.HorizontalPodAutoscaler.spec.targetCPUUtilizationPercentage || '',
-          minReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.minReplicas || '',
-          maxReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.maxReplicas || ''
+          value: deployKindsMap.HorizontalPodAutoscaler.spec.targetCPUUtilizationPercentage || 50,
+          minReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.minReplicas || 3,
+          maxReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.maxReplicas || 10
         }
       : defaultEditVal.hpa,
     configMapList: deployKindsMap.ConfigMap?.data
-      ? Object.entries(deployKindsMap.ConfigMap.data).map(([key, value]) => ({
-          mountPath: key,
+      ? Object.entries(deployKindsMap.ConfigMap.data).map(([key, value], i) => ({
+          mountPath:
+            deployKindsMap.Deployment?.spec?.template.spec?.containers[0].volumeMounts?.find(
+              (item) => item.name === key
+            )?.mountPath || key,
           value
         }))
       : [],
     secret: {
       ...defaultEditVal.secret,
       use: !!deployKindsMap.Secret?.data
-    }
+    },
+    storeList: deployKindsMap.PersistentVolumeClaim
+      ? deployKindsMap.PersistentVolumeClaim.items.map((item) => ({
+          // @ts-ignore
+          path: item.metadata?.annotations?.path || '',
+          // @ts-ignore
+          value: +item.metadata?.annotations?.value
+        }))
+      : []
   };
 };
 
@@ -162,13 +175,13 @@ export const adaptEditAppData = (app: AppDetailType): AppEditType => {
     'replicas',
     'cpu',
     'memory',
-    'servicePorts',
     'containerOutPort',
     'accessExternal',
     'envs',
     'hpa',
     'configMapList',
-    'secret'
+    'secret',
+    'storeList'
   ];
   const res: Record<string, any> = {};
 
@@ -211,12 +224,6 @@ export const adaptYamlToEdit = (yamlList: string[]) => {
     replicas: deployKindsMap?.Deployment?.spec?.replicas,
     cpu: cpuStr ? cpuFormatToM(cpuStr) : undefined,
     memory: memoryStr ? memoryFormatToMi(memoryStr) : undefined,
-    servicePorts: deployKindsMap?.Service?.spec?.ports
-      ? deployKindsMap?.Service?.spec?.ports.map((port) => ({
-          start: port.port,
-          end: Number(port.targetPort)
-        }))
-      : undefined,
     accessExternal: deployKindsMap?.Ingress
       ? {
           use: true,

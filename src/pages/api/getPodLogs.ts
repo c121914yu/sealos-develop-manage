@@ -7,18 +7,30 @@ import { jsonRes } from '@/services/backend/response';
 // get App Metrics By DeployName. compute average value
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   try {
-    const session = await authSession(req.headers);
-
     const { podName } = req.query as { podName: string };
 
     if (!podName) {
       throw new Error('podName is empty');
     }
 
-    const { k8sCore, namespace } = await getK8s({ kubeconfig: session.kubeconfig });
-
+    const { k8sCore, namespace } = await getK8s({
+      kubeconfig: await authSession(req.headers)
+    });
+    console.log(podName, namespace);
     // get pods
-    const { body: data } = await k8sCore.readNamespacedPodLog(podName, namespace);
+    const { body: data } = await k8sCore.readNamespacedPodLog(
+      podName,
+      namespace,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      undefined,
+      50,
+      false
+    );
 
     jsonRes(res, {
       data

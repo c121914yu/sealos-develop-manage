@@ -36,3 +36,21 @@
     fill: #d92a2a !important;
   }
 }
+
+.formTitle {
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+.formSecondTitle {
+  color: #333333;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.textEllipsis {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}

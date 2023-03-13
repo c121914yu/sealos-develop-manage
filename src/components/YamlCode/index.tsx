@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { codeTheme } from './hljs';
+import styles from './index.module.scss';
 
 type TMarkDown = {
   content: string;
@@ -14,6 +15,7 @@ const YamlCode = ({ content, ...props }: TMarkDown) => {
   return (
     <ReactMarkdown
       {...props}
+      className={styles.markdown}
       // eslint-disable-next-line react/no-children-prop
       children={code}
       components={{

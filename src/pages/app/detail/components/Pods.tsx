@@ -9,18 +9,32 @@ import {
   Th,
   Td,
   TableContainer,
-  Flex
+  Flex,
+  CircularProgress,
+  CircularProgressLabel
 } from '@chakra-ui/react';
 import type { PodDetailType } from '@/types/app';
-import Icon from '@/components/Icon';
-import dynamic from 'next/dynamic';
 import { useLoading } from '@/hooks/useLoading';
+import PodLineChart from '@/components/PodLineChart';
+import dynamic from 'next/dynamic';
+import MyIcon from '@/components/Icon';
+import { PodStatusEnum } from '@/constants/app';
+import { printMemory } from '@/utils/tools';
 
 const Logs = dynamic(() => import('./Logs'));
 
-const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean }) => {
+const Pods = ({
+  pods = [],
+  loading,
+  appCpu
+}: {
+  pods: PodDetailType[];
+  loading: boolean;
+  appCpu?: number;
+}) => {
   const [logsPod, setLogsPod] = useState<string>();
   const { Loading } = useLoading();
+
   const columns: {
     title: string;
     dataIndex?: keyof PodDetailType;
@@ -28,34 +42,41 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
     render?: (item: PodDetailType) => JSX.Element | string;
   }[] = [
     {
-      title: '名字',
-      key: 'podName',
-      dataIndex: 'podName'
-    },
-    {
-      title: '节点',
-      key: 'nodeName',
-      dataIndex: 'nodeName'
-    },
-    {
-      title: 'Pod IP',
-      key: 'ip',
-      dataIndex: 'ip'
-    },
-    {
       title: 'Restarts',
-      dataIndex: 'restarts',
-      key: 'restarts'
+      key: 'restarts',
+      dataIndex: 'restarts'
+    },
+    {
+      title: 'Age',
+      key: 'age',
+      dataIndex: 'age'
     },
     {
       title: 'Cpu',
       key: 'cpu',
-      render: (item: PodDetailType) => `${item.cpu}M`
+      render: (item: PodDetailType) => (
+        <Box h={'35px'} w={'90px'}>
+          {appCpu && <PodLineChart type="cpu" cpu={appCpu} data={item.cpu.slice(-6)} />}
+        </Box>
+      )
     },
     {
       title: 'Memory',
       key: 'memory',
-      render: (item: PodDetailType) => `${item.memory}Mi`
+      render: (item: PodDetailType) => (
+        <Box h={'35px'} w={'90px'}>
+          <PodLineChart type="memory" data={item.memory.slice(-6)} />
+        </Box>
+      )
+    },
+    {
+      title: '存储使用量',
+      key: 'store',
+      render: (item: PodDetailType) => (
+        <CircularProgress value={40} color="blue.500">
+          <CircularProgressLabel>40%</CircularProgressLabel>
+        </CircularProgress>
+      )
     },
     {
       title: '状态',
@@ -66,7 +87,11 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
       title: '操作',
       key: 'control',
       render: (item: PodDetailType) => (
-        <Button variant={'outline'} onClick={() => setLogsPod(item.podName)}>
+        <Button
+          variant={'base'}
+          onClick={() => setLogsPod(item.podName)}
+          isDisabled={item.status.value !== PodStatusEnum.Running}
+        >
           日志
         </Button>
       )
@@ -74,15 +99,15 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
   ];
 
   return (
-    <Box minH={'100%'} py={7}>
+    <Box h={'100%'} py={7}>
       <Flex px={4} alignItems={'center'}>
-        <Icon name="icon-info" />
+        <MyIcon name="podList" />
         <Box ml={2} flex={1}>
           Pods List
         </Box>
         <Box>{pods.length} Pods</Box>
       </Flex>
-      <TableContainer mt={5}>
+      <TableContainer mt={5} overflow={'auto'}>
         <Table variant={'simple'} backgroundColor={'white'}>
           <Thead>
             <Tr>
@@ -107,7 +132,16 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
         </Table>
       </TableContainer>
       <Loading loading={loading} fixed={false} />
-      {!!logsPod && <Logs podName={logsPod} closeFn={() => setLogsPod(undefined)} />}
+      {!!logsPod && (
+        <Logs
+          podName={logsPod}
+          podNames={pods
+            .filter((pod) => pod.status.value === PodStatusEnum.Running)
+            .map((item) => item.podName)}
+          setLogsPodName={(name: string) => setLogsPod(name)}
+          closeFn={() => setLogsPod(undefined)}
+        />
+      )}
     </Box>
   );
 };

@@ -17,10 +17,14 @@ export type DeployKindsType =
   | V1Secret
   | V1HorizontalPodAutoscaler;
 
+export type EditType = 'form' | 'yaml';
+
 export interface AppStatusMapType {
   label: string;
   value: `${AppStatusEnum}`;
   color: string;
+  backgroundColor: string;
+  dotColor: string;
 }
 
 export interface AppListItemType {
@@ -28,9 +32,13 @@ export interface AppListItemType {
   name: string;
   status: AppStatusMapType;
   createTime: string;
-  cpu: number[];
-  memory: number[];
-  replicas: number;
+  cpu: number;
+  memory: number;
+  usedCpu: number[];
+  useMemory: number[];
+  activeReplicas: number;
+  minReplicas: number;
+  maxReplicas: number;
 }
 
 export interface AppEditType {
@@ -39,13 +47,9 @@ export interface AppEditType {
   runCMD: string;
   cmdParam: string;
   replicas: number | '';
-  cpu: number | '';
-  memory: number | '';
+  cpu: number;
+  memory: number;
   containerOutPort: number | '';
-  servicePorts: {
-    start: number | '';
-    end?: number | '';
-  }[];
   accessExternal: {
     use: boolean;
     backendProtocol: 'HTTP' | 'GRPC';
@@ -58,21 +62,25 @@ export interface AppEditType {
   }[];
   hpa: {
     use: boolean;
-    target: string | '';
-    value: number | '';
-    minReplicas: number | '';
-    maxReplicas: number | '';
+    target: 'cpu' | 'memory';
+    value: number;
+    minReplicas: number;
+    maxReplicas: number;
   };
-  configMapList: {
-    mountPath: string;
-    value: string;
-  }[];
   secret: {
     use: boolean;
     username: string;
     password: string;
     serverAddress: string;
   };
+  configMapList: {
+    mountPath: string;
+    value: string;
+  }[];
+  storeList: {
+    path: string;
+    value: number;
+  }[];
 }
 
 export interface AppDetailType extends AppEditType {
@@ -96,8 +104,8 @@ export interface PodDetailType {
   ip: string;
   restarts: number;
   age: string;
-  cpu: number;
-  memory: number;
+  cpu: number[];
+  memory: number[];
 }
 export interface PodMetrics {
   podName: string;

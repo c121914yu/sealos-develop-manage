@@ -1,6 +1,5 @@
-import React, { useRef, useState, useCallback, ChangeEvent } from 'react';
-import { Box, Flex, Button, Input, Grid } from '@chakra-ui/react';
-import Icon from '@/components/Icon';
+import React, { useRef, useState, useCallback, ChangeEvent, useMemo } from 'react';
+import { Box, Flex, Button, Input, Grid, useTheme } from '@chakra-ui/react';
 import YamlCode from '@/components/YamlCode/index';
 import styles from './index.module.scss';
 import { useCopyData, reactLocalFileContent } from '@/utils/tools';
@@ -17,6 +16,7 @@ const Yaml = ({
   yamlList: YamlItemType[];
   setValues: UseFormSetValue<AppEditType>;
 }) => {
+  const theme = useTheme();
   const { toast } = useToast();
   const SelectInputDom = useRef<HTMLInputElement>(null);
   const { copyData } = useCopyData();
@@ -57,85 +57,54 @@ const Yaml = ({
   );
 
   return (
-    <Flex
-      border={'1px dashed #DCDCDC'}
-      flexDirection={'column'}
-      height={'100%'}
-      px={'20px'}
-      py={'16px'}
-      boxShadow={'base'}
+    <Grid
+      className={styles.codeBox}
+      h={'100%'}
+      templateColumns={'220px 1fr'}
+      gridGap={5}
+      alignItems={'start'}
     >
-      <Flex
-        w={'100%'}
-        borderBottom={'1px solid #E5E7E9'}
-        pb={5}
-        align={'center'}
-        justifyContent={'space-between'}
-      >
-        <Box fontWeight={'bold'}>yaml 配置文件</Box>
-
-        <>
-          <Input
-            ref={SelectInputDom}
-            type={'file'}
-            position={'absolute'}
-            accept={'.yaml'}
-            left={0}
-            w={0}
-            opacity={0}
-            multiple
-            onChange={selectedFiles}
-          />
-          <Button
-            onClick={() => {
-              SelectInputDom.current?.click();
-            }}
-            isLoading={loadingFiles}
-            loadingText="文件解析中..."
-            variant={'outline'}
-          >
-            <Icon name="icon-plus" color={'var(--chakra-colors-blue-500)'}></Icon>
-            <Box ml={1}>导入yaml配置文件</Box>
-          </Button>
-        </>
-      </Flex>
-
-      {/* filename list */}
-      <Grid w={'100%'} mb={3} gridTemplateColumns={'repeat(3,1fr)'} textAlign={'center'}>
+      <Box border={theme.borders.md} borderRadius={'md'} overflow={'hidden'}>
         {yamlList.map((file, index) => (
           <Box
-            flex={1}
-            pt={2}
-            pr={5}
-            key={file.kind}
-            fontWeight={index === selectedIndex ? 'bold' : 'normal'}
+            key={file.filename}
+            px={5}
+            py={3}
             cursor={'pointer'}
-            userSelect={'none'}
+            _notLast={{
+              borderBottom: theme.borders.base
+            }}
+            {...(index === selectedIndex
+              ? {
+                  fontWeight: 'bold',
+                  backgroundColor: '#F4F6F8'
+                }
+              : {})}
             onClick={() => setSelectedIndex(index)}
           >
             {file.filename}
           </Box>
         ))}
-      </Grid>
-
-      {/* file show */}
+      </Box>
       {!!yamlList[selectedIndex] && (
         <Box
           className={styles.codeBox}
-          flex={'1 0 0'}
-          height={0}
-          overflowY={'auto'}
+          h={'100%'}
+          overflow={'hidden'}
+          border={theme.borders.md}
+          borderRadius={'md'}
           position={'relative'}
         >
-          <YamlCode className={styles.code} content={yamlList[selectedIndex].value} />
+          <Box h={'100%'} overflowY={'auto'} p={4}>
+            <YamlCode className={styles.code} content={yamlList[selectedIndex].value} />
+          </Box>
           {/* copy btn */}
           <Box
             position={'absolute'}
             right={5}
-            top={0}
+            top={3}
             px={3}
             pb={3}
-            backgroundColor={'white'}
             cursor={'pointer'}
             color={'blue.600'}
             fontWeight={'bold'}
@@ -146,7 +115,7 @@ const Yaml = ({
           </Box>
         </Box>
       )}
-    </Flex>
+    </Grid>
   );
 };
 

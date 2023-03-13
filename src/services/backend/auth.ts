@@ -1,4 +1,3 @@
-import { Session } from '@/types/user';
 import { IncomingHttpHeaders } from 'http';
 
 export const authSession = async (header: IncomingHttpHeaders) => {
@@ -7,8 +6,8 @@ export const authSession = async (header: IncomingHttpHeaders) => {
   if (!authorization) return Promise.reject('缺少凭证');
 
   try {
-    const session: Session = JSON.parse(decodeURIComponent(authorization));
-    return Promise.resolve(session);
+    const kubeConfig = decodeURIComponent(authorization);
+    return Promise.resolve(kubeConfig);
   } catch (err) {
     return Promise.reject('凭证错误');
   }

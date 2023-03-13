@@ -1,23 +1,38 @@
-type TIconfont = {
-  name: string;
-  color?: string;
-  width?: number | string;
-  height?: number | string;
-  className?: string;
+import React from 'react';
+import type { IconProps } from '@chakra-ui/react';
+import { Icon } from '@chakra-ui/react';
+import dynamic from 'next/dynamic';
+
+const map = {
+  more: require('./icons/more.svg').default,
+  store: require('./icons/store.svg').default,
+  configMap: require('./icons/configMap.svg').default,
+  noApp: require('./icons/noApp.svg').default,
+  podList: require('./icons/podList.svg').default,
+  arrowLeft: require('./icons/arrowLeft.svg').default,
+  plus: require('./icons/plus.svg').default,
+  delete: require('./icons/delete.svg').default,
+  statusicon: require('./icons/statusicon.svg').default,
+  restart: require('./icons/restart.svg').default
 };
 
-function Icon({ name, color = 'inherit', width = 16, height = 16, className = '' }: TIconfont) {
-  const style = {
-    fill: color,
-    width,
-    height
-  };
+const MyIcon = ({
+  name,
+  w = 'auto',
+  h = 'auto',
+  ...props
+}: { name: keyof typeof map } & IconProps) => {
+  return map[name] ? (
+    <Icon
+      as={map[name]}
+      boxSizing={'content-box'}
+      verticalAlign={'top'}
+      fill={'currentColor'}
+      w={w}
+      h={h}
+      {...props}
+    />
+  ) : null;
+};
 
-  return (
-    <svg className={`icon ${className}`} style={style}>
-      <use xlinkHref={`#${name}`}></use>
-    </svg>
-  );
-}
-
-export default Icon;
+export default MyIcon;

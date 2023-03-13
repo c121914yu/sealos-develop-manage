@@ -6,6 +6,7 @@ import axios, {
 } from 'axios';
 import type { ApiResp } from './kubernet';
 import { isApiResp } from './kubernet';
+import type { Session } from '../types/user';
 
 const showStatus = (status: number) => {
   let message = '';
@@ -67,10 +68,16 @@ request.interceptors.request.use(
     // if (MOCK_SESSION) {
     //   _headers['Authorization'] = JSON.stringify(MOCK_SESSION)
     // }
-    const session = localStorage.getItem('session');
-    _headers['Authorization'] = encodeURIComponent(
-      session || process.env.NEXT_PUBLIC_MOCK_USER || ''
-    );
+    let kubeConfig: string = process.env.NEXT_PUBLIC_MOCK_USER || '';
+    try {
+      const store = localStorage.getItem('session');
+      if (store) {
+        kubeConfig = JSON.parse(store)?.kubeconfig;
+      }
+    } catch (err) {
+      err;
+    }
+    _headers['Authorization'] = encodeURIComponent(kubeConfig);
     if (!config.headers || config.headers['Content-Type'] === '') {
       _headers['Content-Type'] = 'application/json';
     }

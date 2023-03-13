@@ -1,9 +1,30 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, TableContainer } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Flex,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuDivider
+} from '@chakra-ui/react';
 import { AppListItemType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
+import AppStatusTag from '@/components/AppStatusTag';
+import MyIcon from '@/components/Icon';
 
 const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
   const columns: {
@@ -29,7 +50,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
     {
       title: '状态',
       key: 'status',
-      render: (item: AppListItemType) => <Box color={item.status.color}>{item.status.label}</Box>
+      render: (item: AppListItemType) => <AppStatusTag status={item.status} />
     },
     {
       title: '创建时间',
@@ -41,7 +62,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
       key: 'cpu',
       render: (item: AppListItemType) => (
         <Box h={'35px'} w={'90px'}>
-          <PodLineChart backgroundColor="#c9f4e8" data={item.cpu} formatter="{c} M" />
+          <PodLineChart type="cpu" cpu={item.cpu} data={item.usedCpu.slice(-6)} />
         </Box>
       )
     },
@@ -50,38 +71,37 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
       key: 'storage',
       render: (item: AppListItemType) => (
         <Box h={'35px'} w={'90px'}>
-          <PodLineChart backgroundColor="#c9d7f4" data={item.memory} formatter="{c} Mi" />
+          <PodLineChart type="memory" data={item.useMemory.slice(-6)} />
         </Box>
       )
     },
     {
-      title: '副本数',
-      dataIndex: 'replicas',
-      key: 'replicas'
+      title: '实例数',
+      key: 'activeReplicas',
+      render: (item: AppListItemType) => (
+        <Flex>
+          <Box>活跃: {item.activeReplicas}</Box>
+          {item.minReplicas !== item.maxReplicas && (
+            <Box color={'blackAlpha.500'}>
+              &ensp;/&ensp;总共: {item.minReplicas}-{item.maxReplicas}
+            </Box>
+          )}
+        </Flex>
+      )
     },
     {
       title: '操作',
       key: 'control',
       render: (item: AppListItemType) => (
-        <>
-          <Button
-            colorScheme={'green'}
-            mr={4}
-            onClick={() => {
-              router.push(`/app/detail?name=${item.name}`);
-            }}
-          >
-            详情
-          </Button>
-          <Button
-            colorScheme={'blue'}
-            onClick={() => {
-              router.push(`/app/edit?name=${item.name}`);
-            }}
-          >
-            变更
-          </Button>
-        </>
+        <Button
+          variant={'base'}
+          onClick={(e) => {
+            router.push(`/app/edit?name=${item.name}`);
+            e.stopPropagation();
+          }}
+        >
+          变更
+        </Button>
       )
     }
   ];
@@ -92,7 +112,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
     <Box backgroundColor={'#f9f9f9'} p={34} minH="100vh">
       <Box display={'flex'} alignItems={'flex-start'} justifyContent={'space-between'}>
         <Box display={'flex'} alignItems={'center'}>
-          <Image className="" src="/imgs/no-app.svg" width={46} height={44} alt=""></Image>
+          <MyIcon name="noApp" w={'46px'} h={'44px'} />
           <h5>
             <strong>应用列表</strong>
           </h5>
@@ -113,7 +133,16 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
           </Thead>
           <Tbody>
             {apps.map((app) => (
-              <Tr key={app.id}>
+              <Tr
+                key={app.id}
+                cursor={'pointer'}
+                _hover={{
+                  backgroundColor: 'gray.50'
+                }}
+                onClick={() => {
+                  router.push(`/app/detail?name=${app.name}`);
+                }}
+              >
                 {columns.map((col) => (
                   <Td key={col.key}>
                     {col.render ? col.render(app) : col.dataIndex ? `${app[col.dataIndex]}` : ''}

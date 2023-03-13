@@ -1,6 +1,6 @@
 import yaml from 'js-yaml';
 import type { AppEditType } from '@/types/app';
-import { strToBase4, str2Num, configPathFormat, configNameFormat } from '@/utils/tools';
+import { strToBase64, str2Num, pathFormat, pathToNameFormat } from '@/utils/tools';
 
 export const json2Development = (data: AppEditType) => {
   const template = {
@@ -8,9 +8,14 @@ export const json2Development = (data: AppEditType) => {
     kind: 'Deployment',
     metadata: {
       name: data.appName,
+      annotations: {
+        originImageName: data.imageName
+      },
       labels: {
         'cloud.sealos.io/appname': data.appName,
-        app: data.appName
+        app: data.appName,
+        minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
+        maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       }
     },
     spec: {
@@ -24,7 +29,7 @@ export const json2Development = (data: AppEditType) => {
         type: 'RollingUpdate',
         rollingUpdate: {
           maxUnavailable: 1,
-          maxSurge: 1
+          maxSurge: 0
         }
       },
       template: {
@@ -45,7 +50,7 @@ export const json2Development = (data: AppEditType) => {
           containers: [
             {
               name: data.appName,
-              image: data.imageName,
+              image: `${data.secret.use ? `${data.secret.serverAddress}/` : ''}${data.imageName}`,
               env:
                 data.envs.length > 0
                   ? data.envs.map((env) => ({
@@ -55,57 +60,69 @@ export const json2Development = (data: AppEditType) => {
                   : [],
               resources: {
                 requests: {
-                  cpu: `${str2Num(data.cpu)}m`,
-                  memory: `${str2Num(data.memory)}Mi`
+                  cpu: `${str2Num(Math.floor(data.cpu / 2))}m`,
+                  // cpu: '5m',
+                  memory: `${str2Num(Math.floor(data.memory / 2))}Mi`
                 },
                 limits: {
-                  cpu: '30m',
-                  memory: '300Mi'
+                  cpu: `${str2Num(data.cpu)}m`,
+                  // cpu: '30m',
+                  memory: `${str2Num(data.memory)}Mi`
                 }
               },
-              command: data.runCMD
-                ? data.runCMD
-                    .split(' ')
-                    .filter((item) => item)
-                    .map((item) => `${item}`)
-                : [],
-              args: data.cmdParam
-                ? data.cmdParam
-                    .split(' ')
-                    .filter((item) => item)
-                    .map((item) => `${item}`)
-                : [],
+              command: (() => {
+                try {
+                  return JSON.parse(data.runCMD);
+                } catch (error) {
+                  return [];
+                }
+              })(),
+              args: (() => {
+                try {
+                  return JSON.parse(data.cmdParam);
+                } catch (error) {
+                  return [];
+                }
+              })(),
               ports: [
                 {
                   containerPort: str2Num(data.containerOutPort)
                 }
               ],
               imagePullPolicy: 'Always',
-              volumeMounts:
-                data.configMapList.length > 0
-                  ? data.configMapList.map((item) => ({
-                      name: configNameFormat(item.mountPath),
-                      mountPath: item.mountPath,
-                      subPath: configPathFormat(item.mountPath)
-                    }))
-                  : undefined
+              volumeMounts: [
+                ...data.configMapList.map((item) => ({
+                  name: pathToNameFormat(item.mountPath),
+                  mountPath: item.mountPath,
+                  subPath: pathFormat(item.mountPath)
+                })),
+                ...data.storeList.map((item) => ({
+                  mountPath: item.path,
+                  name: pathToNameFormat(item.path)
+                }))
+              ]
             }
           ],
-          volumes:
-            data.configMapList.length > 0
-              ? data.configMapList.map((item) => ({
-                  name: configNameFormat(item.mountPath),
-                  configMap: {
-                    name: data.appName,
-                    items: [
-                      {
-                        key: configNameFormat(item.mountPath),
-                        path: configPathFormat(item.mountPath)
-                      }
-                    ]
+          volumes: [
+            ...data.configMapList.map((item) => ({
+              name: pathToNameFormat(item.mountPath), // name === [development.***.volumeMounts[*].name]
+              configMap: {
+                name: data.appName, // name === configMap.yaml.meta.name
+                items: [
+                  {
+                    key: pathToNameFormat(item.mountPath),
+                    path: pathFormat(item.mountPath) // path ===[development.***.volumeMounts[*].subPath]
                   }
-                }))
-              : undefined
+                ]
+              }
+            })),
+            ...data.storeList.map((item) => ({
+              name: pathToNameFormat(item.path),
+              persistentVolumeClaim: {
+                claimName: `${data.appName}-${pathToNameFormat(item.path)}`
+              }
+            }))
+          ]
         }
       }
     }
@@ -125,17 +142,11 @@ export const json2Service = (data: AppEditType) => {
       }
     },
     spec: {
-      ports: !!data.servicePorts?.[0]?.end
-        ? data.servicePorts.map((item, i) => ({
-            name: `${data.appName}${i}`,
-            port: item.start,
-            targetPort: item.end
-          }))
-        : [
-            {
-              port: str2Num(data.containerOutPort)
-            }
-          ],
+      ports: [
+        {
+          port: str2Num(data.containerOutPort)
+        }
+      ],
       selector: {
         app: data.appName
       }
@@ -173,11 +184,7 @@ export const json2Ingress = (data: AppEditType) => {
                   service: {
                     name: data.appName,
                     port: {
-                      number: str2Num(
-                        !!data.servicePorts?.[0]?.start
-                          ? data.servicePorts[0].start
-                          : data.containerOutPort
-                      )
+                      number: data.containerOutPort
                     }
                   }
                 }
@@ -202,17 +209,14 @@ export const json2ConfigMap = (data: AppEditType) => {
 
   const configFile: { [key: string]: string } = {};
   data.configMapList.forEach((item) => {
-    configFile[configNameFormat(item.mountPath)] = item.value;
+    configFile[pathToNameFormat(item.mountPath)] = item.value; // key ===  [development.***.volumes[*].configMap.items[0].key]
   });
 
   const template = {
     apiVersion: 'v1',
     kind: 'ConfigMap',
     metadata: {
-      name: data.appName,
-      labels: {
-        'cloud.sealos.io/appname': data.appName
-      }
+      name: data.appName
     },
     data: configFile
   };
@@ -221,8 +225,8 @@ export const json2ConfigMap = (data: AppEditType) => {
 };
 
 export const json2Secret = (data: AppEditType) => {
-  const auth = strToBase4(`${data.secret.username}:${data.secret.password}`);
-  const dockerconfigjson = strToBase4(
+  const auth = strToBase64(`${data.secret.username}:${data.secret.password}`);
+  const dockerconfigjson = strToBase64(
     JSON.stringify({
       auths: {
         [data.secret.serverAddress || '']: {
@@ -252,10 +256,7 @@ export const json2HPA = (data: AppEditType) => {
     apiVersion: 'autoscaling/v2beta2',
     kind: 'HorizontalPodAutoscaler',
     metadata: {
-      name: data.appName,
-      label: {
-        'cloud.sealos.io/appname': data.appName
-      }
+      name: data.appName
     },
     spec: {
       scaleTargetRef: {
@@ -265,14 +266,24 @@ export const json2HPA = (data: AppEditType) => {
       },
       minReplicas: str2Num(data.hpa?.minReplicas),
       maxReplicas: str2Num(data.hpa?.maxReplicas),
-      targetCPUUtilizationPercentage: str2Num(data.hpa?.value),
+      metrics: [
+        {
+          type: 'Resource',
+          resource: {
+            name: data.hpa.target,
+            target: {
+              type: 'Utilization',
+              averageUtilization: str2Num(data.hpa.value)
+            }
+          }
+        }
+      ],
       behavior: {
         scaleDown: {
           policies: [
-            // 60 seconds
             {
               type: 'Pods',
-              value: 2,
+              value: 1,
               periodSeconds: 60
             }
           ]
@@ -290,4 +301,32 @@ export const json2HPA = (data: AppEditType) => {
     }
   };
   return yaml.dump(template);
+};
+
+export const json2Pv = (data: AppEditType) => {
+  const template = data.storeList.map((item) =>
+    yaml.dump({
+      apiVersion: 'v1',
+      kind: 'PersistentVolumeClaim',
+      metadata: {
+        annotations: {
+          path: item.path,
+          value: `${item.value}`
+        },
+        labels: {
+          app: data.appName
+        },
+        name: `${data.appName}-${pathToNameFormat(item.path)}`
+      },
+      spec: {
+        accessModes: ['ReadWriteOnce'],
+        resources: {
+          requests: {
+            storage: `${item.value}Gi`
+          }
+        }
+      }
+    })
+  );
+  return template.join('\n---\n');
 };

@@ -24,7 +24,7 @@ const ErrorModal = ({
       <ModalContent>
         <ModalHeader color={'red.500'}>{title}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody minH={'200px'} whiteSpace={'pre-wrap'}>
+        <ModalBody maxH={'50vh'} overflow={'auto'} whiteSpace={'pre-wrap'}>
           {content}
         </ModalBody>
       </ModalContent>

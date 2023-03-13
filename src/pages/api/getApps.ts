@@ -6,9 +6,9 @@ import { jsonRes } from '@/services/backend/response';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   try {
-    const session = await authSession(req.headers);
-
-    const { k8sApp, namespace } = await getK8s({ kubeconfig: session.kubeconfig });
+    const { k8sApp, k8sAutoscaling, namespace } = await getK8s({
+      kubeconfig: await authSession(req.headers)
+    });
 
     const response = await k8sApp.listNamespacedDeployment(namespace);
     const data = response.body?.items.filter(

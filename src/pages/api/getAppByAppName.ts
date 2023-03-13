@@ -10,29 +10,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!appName) {
       throw new Error('appName is empty');
     }
-    const session = await authSession(req.headers);
 
     const { k8sApp, k8sCore, k8sNetworkingApp, k8sAutoscaling, namespace } = await getK8s({
-      kubeconfig: session.kubeconfig
+      kubeconfig: await authSession(req.headers)
     });
 
     const response = await Promise.allSettled([
+      k8sApp.readNamespacedDeployment(appName, namespace),
       k8sCore.readNamespacedService(appName, namespace),
       k8sCore.readNamespacedConfigMap(appName, namespace),
-      k8sApp.readNamespacedDeployment(appName, namespace),
       k8sNetworkingApp.readNamespacedIngress(appName, namespace),
       k8sCore.readNamespacedSecret(appName, namespace),
-      k8sAutoscaling.readNamespacedHorizontalPodAutoscaler(appName, namespace)
+      k8sAutoscaling.readNamespacedHorizontalPodAutoscaler(appName, namespace),
+      k8sCore
+        .listNamespacedPersistentVolumeClaim(
+          namespace,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          `app=${appName}`
+        )
+        .then((res) => ({
+          body: {
+            kind: 'PersistentVolumeClaim',
+            items: res.body.items.filter((item) => !item.metadata?.deletionTimestamp)
+          }
+        }))
     ]);
 
+    // Check for errors other than 404
     const responseData = response
-      .filter((item) => item.status === 'fulfilled')
-      // @ts-ignore
-      .map((item) => item?.value?.body);
-
-    if (responseData.length === 0) {
-      throw new Error('Get APP Deployment Error');
-    }
+      .map((item) => {
+        if (item.status === 'fulfilled') return item.value.body;
+        if (+item.reason?.body?.code === 404) return '';
+        throw new Error('Get APP Deployment Error');
+      })
+      .filter((item) => item);
 
     jsonRes(res, {
       data: responseData

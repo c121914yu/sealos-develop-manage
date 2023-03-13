@@ -5,6 +5,7 @@ import { getK8s } from '@/services/backend/kubernetes';
 import { jsonRes } from '@/services/backend/response';
 import { YamlKindEnum } from '@/utils/adapt';
 import yaml from 'js-yaml';
+import type { DeployKindsType } from '@/types/app';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   const { yamlList, appName }: { yamlList: string[]; appName: string } = req.body;
@@ -16,10 +17,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
   try {
-    const session = await authSession(req.headers);
-
     const { applyYamlList, k8sCore, k8sNetworkingApp, k8sAutoscaling, namespace } = await getK8s({
-      kubeconfig: session.kubeconfig
+      kubeconfig: await authSession(req.headers)
     });
 
     // Compare YAMLs and delete YAMLs that are not there
@@ -41,16 +40,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         delApi: () => k8sCore.deleteNamespacedSecret(appName, namespace)
       }
     ];
-    const kindList = yamlList.map((item) => {
-      const json = yaml.load(item) as Record<string, any>;
-      return json.kind || '';
+
+    const jsonYaml = yamlList.map((item) => yaml.loadAll(item)).flat() as DeployKindsType[];
+
+    const delArr = deleteArr.filter(
+      (item) => !jsonYaml.find((yaml: any) => yaml.kind === item.kind)
+    );
+    await Promise.allSettled(
+      delArr.map((item) => {
+        console.log(`delete ${item.kind}`);
+        return item.delApi();
+      })
+    );
+
+    // get all pv
+    const response = await k8sCore
+      .listNamespacedPersistentVolumeClaim(
+        namespace,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        `app=${appName}`
+      )
+      .then((res) => res.body.items.filter((item) => !item.metadata?.deletionTimestamp));
+    // delete pv
+    const removedPv = response.filter((item) => {
+      const path = item.metadata?.annotations?.path;
+      if (!path) return false;
+      return !jsonYaml.find((yaml: any) => yaml?.metadata?.annotations?.path === path);
     });
+    await Promise.allSettled(
+      removedPv.map((item) =>
+        k8sCore.deleteNamespacedPersistentVolumeClaim(item?.metadata?.name as string, namespace)
+      )
+    );
+    console.log(`delete pv: ${removedPv.map((item) => item?.metadata?.name)}`);
 
-    const delArr = deleteArr.filter((item) => !kindList.includes(item.kind));
-    await Promise.allSettled(delArr.map((item) => item.delApi()));
-    const applyRes = await applyYamlList(yamlList, 'replace');
+    // filter
+    const applyYaml = jsonYaml
+      .filter((item) => {
+        if (item?.kind !== YamlKindEnum.PersistentVolumeClaim) return true;
+        return !response.find(
+          (yaml) => yaml?.metadata?.annotations?.path === item?.metadata?.annotations?.path
+        );
+      })
+      .map((item) => yaml.dump(item));
 
-    jsonRes(res, { data: applyRes });
+    // apply new yaml
+    const applyRes = await applyYamlList(applyYaml, 'replace');
+
+    jsonRes(res, { data: applyRes.map((item) => item.kind) });
   } catch (err: any) {
     jsonRes(res, {
       code: 500,

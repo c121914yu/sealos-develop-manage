@@ -6,24 +6,38 @@ import { jsonRes } from '@/services/backend/response';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   try {
-    const { name } = req.query;
+    const { name } = req.query as { name: string };
     if (!name) {
       throw new Error('deploy name is empty');
     }
-    const session = await authSession(req.headers);
 
     const { k8sApp, k8sCore, k8sAutoscaling, k8sNetworkingApp, namespace } = await getK8s({
-      kubeconfig: session.kubeconfig
+      kubeconfig: await authSession(req.headers)
     });
 
-    /* delete all service */
+    // list PersistentVolumeClaim
+    const persistentVolumeClaimList = await k8sCore
+      .listNamespacedPersistentVolumeClaim(
+        namespace,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        `app=${name}`
+      )
+      .then((res) => res.body.items.map((item) => item.metadata?.name).filter((item) => item));
+
+    /* delete all sources */
     const response = await Promise.allSettled([
-      k8sApp.deleteNamespacedDeployment(name as string, namespace), // delete deploy
-      k8sCore.deleteNamespacedService(name as string, namespace), // delete service
-      k8sCore.deleteNamespacedConfigMap(name as string, namespace), // delete configMap
-      k8sCore.deleteNamespacedSecret(name as string, namespace), // delete secret
-      k8sNetworkingApp.deleteNamespacedIngress(name as string, namespace), // delete Ingress
-      k8sAutoscaling.deleteNamespacedHorizontalPodAutoscaler(name as string, namespace) // delete HorizontalPodAutoscaler
+      k8sApp.deleteNamespacedDeployment(name, namespace), // delete deploy
+      k8sCore.deleteNamespacedService(name, namespace), // delete service
+      k8sCore.deleteNamespacedConfigMap(name, namespace), // delete configMap
+      k8sCore.deleteNamespacedSecret(name, namespace), // delete secret
+      ...persistentVolumeClaimList.map((item) =>
+        k8sCore.deleteNamespacedPersistentVolumeClaim(item as string, namespace)
+      ),
+      k8sNetworkingApp.deleteNamespacedIngress(name, namespace), // delete Ingress
+      k8sAutoscaling.deleteNamespacedHorizontalPodAutoscaler(name, namespace) // delete HorizontalPodAutoscaler
     ]);
 
     if (response.filter((item) => item.status === 'fulfilled').length === 0) {

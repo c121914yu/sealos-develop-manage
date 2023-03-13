@@ -1,15 +1,17 @@
 import React, { useCallback, useState } from 'react';
-import { Box, Flex, Button } from '@chakra-ui/react';
+import { Box, Flex, Button, IconButton } from '@chakra-ui/react';
 import type { AppStatusMapType } from '@/types/app';
-import Icon from '@/components/Icon';
 import { useRouter } from 'next/router';
 import { delAppByName, restartAppByName } from '@/api/app';
 import { useToast } from '@/hooks/useToast';
 import { useConfirm } from '@/hooks/useConfirm';
 import { AppStatusEnum, appStatusMap } from '@/constants/app';
+import AppStatusTag from '@/components/AppStatusTag';
+import MyIcon from '@/components/Icon';
+import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 
 const Header = ({
-  appName = 'app name',
+  appName = 'app-name',
   appStatus = appStatusMap[AppStatusEnum.waiting]
 }: {
   appName?: string;
@@ -65,21 +67,17 @@ const Header = ({
 
   return (
     <Flex h={'80px'} alignItems={'center'}>
-      <Box pr={2} cursor={'pointer'} onClick={router.back}>
-        <Icon name="icon-left-arrow"></Icon>
-      </Box>
+      <MyIcon name="arrowLeft" pr={2} cursor={'pointer'} onClick={router.back} />
       <Box ml={3} mr={2} fontSize={'lg'}>
         {appName}
       </Box>
-      <Icon name="icon-info"></Icon>
-      <Box flex={1}>
-        <Box ml={3} color={appStatus.color}>
-          {appStatus.label}
-        </Box>
+      <Box flex={1} ml={4}>
+        <AppStatusTag status={appStatus} />
       </Box>
       {/* btns */}
       <Button
         mr={5}
+        leftIcon={<EditIcon />}
         colorScheme={'blue'}
         onClick={() => {
           router.push(`/app/edit?name=${appName}`);
@@ -90,16 +88,23 @@ const Header = ({
       <Button
         mr={5}
         colorScheme={'gray'}
+        leftIcon={<MyIcon name="restart" w={'14px'} h={'14px'} />}
         onClick={openRestartConfirm(handleRestartApp)}
         isLoading={loading}
       >
-        重启
+        重启应用
       </Button>
-      <Button colorScheme={'red'} onClick={openDelConfirm(handleDelApp)} isLoading={loading}>
-        <Icon name="icon-shanchu" color={'#fff'}></Icon>
+      <Button
+        leftIcon={<DeleteIcon />}
+        colorScheme={'red'}
+        aria-label={'DeleteIcon'}
+        isLoading={loading}
+        onClick={openDelConfirm(handleDelApp)}
+      >
+        删除
       </Button>
-      <DelConfirmChild />
       <RestartConfirmChild />
+      <DelConfirmChild />
     </Flex>
   );
 };

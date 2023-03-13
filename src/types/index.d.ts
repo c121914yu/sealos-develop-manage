@@ -4,6 +4,5 @@ export type QueryType = {
 
 export interface YamlItemType {
   filename: string;
-  kind: string;
   value: string;
 }

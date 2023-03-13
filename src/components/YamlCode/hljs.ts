@@ -2,7 +2,6 @@ export const codeTheme = {
   hljs: {
     display: 'block',
     overflowX: 'auto',
-    padding: '0.5em',
     color: '#2f3337'
   },
   linenumber: {

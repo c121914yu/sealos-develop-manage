@@ -6,7 +6,7 @@ import { jsonRes } from '@/services/backend/response';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   const { yamlList }: { yamlList: string[] } = req.body;
-  if (!yamlList || yamlList.length === 0) {
+  if (!yamlList || yamlList.length < 2) {
     jsonRes(res, {
       code: 500,
       error: 'params error'
@@ -14,13 +14,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
   try {
-    const session = await authSession(req.headers);
-
-    const { applyYamlList } = await getK8s({ kubeconfig: session.kubeconfig });
+    const { applyYamlList } = await getK8s({
+      kubeconfig: await authSession(req.headers)
+    });
 
     const applyRes = await applyYamlList(yamlList, 'create');
 
-    jsonRes(res, { data: applyRes });
+    jsonRes(res, { data: applyRes.map((item) => item.kind) });
   } catch (err: any) {
     jsonRes(res, {
       code: 500,

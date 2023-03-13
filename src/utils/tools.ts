@@ -38,12 +38,15 @@ export const str2Num = (str?: string | number) => {
   return !!str ? +str : '';
 };
 
-export const configPathFormat = (str: string) => {
+/**
+ * 格式化路径以 ./ 开头
+ */
+export const pathFormat = (str: string) => {
   if (str.startsWith('/')) return `.${str}`;
   return `./${str}`;
 };
-export const configNameFormat = (str: string) => {
-  if (!str.startsWith('/')) return str.replace(/\./g, '-');
+export const pathToNameFormat = (str: string) => {
+  if (!str.startsWith('/')) return str.replace(/(\/|\.)/g, '-');
   return str.substring(1).replace(/(\/|\.)/g, '-');
 };
 
@@ -66,7 +69,7 @@ export const reactLocalFileContent = (file: File) => {
 /**
  * str to base64
  */
-export const strToBase4 = (str: string) => {
+export const strToBase64 = (str: string) => {
   const encoded = encodeURIComponent(str);
   try {
     const base64 = window.btoa(str);
@@ -93,14 +96,11 @@ export const cpuFormatToM = (cpu: string) => {
     value = value / 1000;
   } else if (/m/gi.test(cpu)) {
     value = value;
-  } else if (/s/gi.test(cpu)) {
-    value = value * 1000;
   } else {
-    console.log('Invalid CPU value');
-    value = 0;
+    value = value * 1000;
   }
-
-  return Number(value.toFixed(2));
+  if (value < 0.01) return 0;
+  return Number(value.toFixed(4));
 };
 
 /**
@@ -127,6 +127,13 @@ export const memoryFormatToMi = (memory: string) => {
   }
 
   return Number(value.toFixed(2));
+};
+
+/**
+ * print memory to Mi of Gi
+ */
+export const printMemory = (val: number) => {
+  return val >= 1024 ? `${val / 1024} Gi` : `${val} Mi`;
 };
 
 /**

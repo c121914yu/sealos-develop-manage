@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import type { AppListItemType, AppDetailType, PodDetailType } from '@/types/app';
 import { getMyApps, getAppPodsByAppName, getAppByName, getPodsMetrics } from '@/api/app';
 import { appStatusMap, PodStatusEnum } from '@/constants/app';
+import { MOCK_APP_DETAIL, MOCK_PODS } from '@/mock/apps';
 
 type State = {
   appList: AppListItemType[];
@@ -18,7 +19,7 @@ export const useAppStore = create<State>()(
   devtools(
     immer((set, get) => ({
       appList: [],
-      appDetail: undefined,
+      appDetail: MOCK_APP_DETAIL,
       appDetailPods: [],
       setAppList: async () => {
         const res = await getMyApps();
@@ -71,33 +72,44 @@ export const useAppStore = create<State>()(
           }));
         });
 
+        // ============================================
+
         // get metrics and update
         getPodsMetrics(pods.map((pod) => pod.podName))
           .then((metrics) => {
-            const aveCpu = Number(metrics.reduce((sum, item) => sum + item.cpu, 0).toFixed(1));
-            const aveMemory = Number(
-              metrics.reduce((sum, item) => sum + item.memory, 0).toFixed(1)
-            );
-
             set((state) => {
               // update pod cpu and memory
-              state.appDetailPods = state.appDetailPods.map((pod) => ({
-                ...pod,
-                cpu: metrics.find((item) => item.podName === pod.podName)?.cpu || pod.cpu,
-                memory: metrics.find((item) => item.podName === pod.podName)?.memory || pod.memory
-              }));
+              state.appDetailPods = state.appDetailPods.map((pod) => {
+                const currentCpu = metrics.find((item) => item.podName === pod.podName)?.cpu || 0;
+                const currentMemory =
+                  metrics.find((item) => item.podName === pod.podName)?.memory || 0;
 
-              // update app average cpu and memory
+                return {
+                  ...pod,
+                  cpu: [...pod.cpu.slice(1), currentCpu],
+                  memory: [...pod.memory.slice(1), currentMemory]
+                };
+              });
+
+              const aveCpu = Number(
+                metrics.reduce((sum, item) => sum + item.cpu / metrics.length, 0).toFixed(4)
+              );
+              const aveMemory = Number(
+                metrics.reduce((sum, item) => sum + item.memory / metrics.length, 0).toFixed(4)
+              );
+
+              // update detailApp average cpu and memory
               if (state?.appDetail?.appName === appName) {
-                state.appDetail.usedCpu = state.appDetail.usedCpu.slice(1).concat(aveCpu);
-                state.appDetail.usedMemory = state.appDetail.usedMemory.slice(1).concat(aveMemory);
+                state.appDetail.usedCpu = [...state.appDetail.usedCpu.slice(1), aveCpu];
+                state.appDetail.usedMemory = [...state.appDetail.usedMemory.slice(1), aveMemory];
               }
 
               //  update appList
               state.appList = state.appList.map((item) => ({
                 ...item,
-                cpu: item.name === appName ? item.cpu.slice(1).concat(aveCpu) : item.cpu,
-                memory: item.name === appName ? item.memory.slice(1).concat(aveMemory) : item.memory
+                usedCpu: item.name === appName ? [...item.usedCpu.slice(1), aveCpu] : item.usedCpu,
+                useMemory:
+                  item.name === appName ? [...item.useMemory.slice(1), aveMemory] : item.useMemory
               }));
             });
           })

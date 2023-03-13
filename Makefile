@@ -1,4 +1,3 @@
-
 SERVICE_NAME=sealos-deploy-manager
 # Image URL to use all building/pushing image targets
 IMG ?= $(SERVICE_NAME):latest

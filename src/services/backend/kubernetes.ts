@@ -11,7 +11,6 @@ export function K8sApi(config: string): k8s.KubeConfig {
     let server: k8s.Cluster;
 
     const [inCluster, hosts] = CheckIsInCluster();
-
     if (inCluster && hosts !== '') {
       server = {
         name: cluster.name,
@@ -157,7 +156,8 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
   const applyYamlList = async (yamlList: string[], type: 'create' | 'replace') => {
     // insert namespace
     const formatYaml = yamlList
-      .map((item) => yaml.load(item))
+      .map((item) => yaml.loadAll(item))
+      .flat()
       .map((item: any) => {
         if (item.metadata) {
           item.metadata.namespace = namespace;

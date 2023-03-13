@@ -23,6 +23,6 @@ export const getPodsMetrics = (podsName: string[]) =>
     item.map(adaptMetrics)
   );
 
-export const getPodLogs = (podName: string) => GET(`/api/geetPodLogs?podName=${podName}`);
+export const getPodLogs = (podName: string) => GET(`/api/getPodLogs?podName=${podName}`);
 
 export const restartAppByName = (appName: string) => GET(`/api/restartApp?appName=${appName}`);

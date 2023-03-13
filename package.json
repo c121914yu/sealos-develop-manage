@@ -13,6 +13,7 @@
     "format": "prettier --config \"./.prettierrc.js\" --write \"./src/**/*.{ts,tsx,scss}\""
   },
   "dependencies": {
+    "@chakra-ui/icons": "^2.0.17",
     "@chakra-ui/react": "^2.5.1",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
@@ -41,6 +42,7 @@
     "zustand": "^4.3.5"
   },
   "devDependencies": {
+    "@svgr/webpack": "^6.5.1",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash": "^4.14.191",
     "@types/node": "18.13.0",
@@ -51,7 +53,8 @@
     "eslint": "8.33.0",
     "eslint-config-next": "13.1.6",
     "husky": "^8.0.3",
-    "lint-staged": "^13.1.2"
+    "lint-staged": "^13.1.2",
+    "svg-inline-loader": "^0.8.2"
   },
   "lint-staged": {
     "./src/**/*.{ts,tsx,scss}": "npm run format"

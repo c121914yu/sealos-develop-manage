@@ -6,9 +6,12 @@ import {
   extendTheme
 } from '@chakra-ui/react';
 
-// 按键
 const Button = defineStyleConfig({
-  baseStyle: {},
+  baseStyle: {
+    _active: {
+      transform: 'scale(0.98)'
+    }
+  },
   sizes: {
     sm: {
       fontSize: 'sm',
@@ -36,8 +39,17 @@ const Button = defineStyleConfig({
     }
   },
   variants: {
-    outline: {
-      borderWidth: '1.5px'
+    base: {
+      backgroundColor: '#EAEEF1',
+      color: '#54585C',
+      px: 5,
+      py: 1,
+      _hover: {
+        filter: 'brightness(95%)'
+      },
+      _disabled: {
+        backgroundColor: 'gray.300 !important'
+      }
     }
   },
   defaultProps: {
@@ -46,14 +58,35 @@ const Button = defineStyleConfig({
   }
 });
 
+const Input: ComponentStyleConfig = {
+  baseStyle: {
+    field: {}
+  },
+  variants: {
+    outline: {
+      field: {
+        backgroundColor: 'transparent',
+        border: '1px solid',
+        borderColor: 'gray.300',
+        _focus: {
+          backgroundColor: 'transparent',
+          borderColor: 'blue.500'
+        }
+      }
+    }
+  },
+  defaultProps: {
+    size: 'md',
+    variant: 'outline'
+  }
+};
+
 export const theme = extendTheme({
   styles: {
     global: {
       'html, body': {
         color: 'blackAlpha.800',
         fontSize: 'md',
-        fontFamily:
-          'Söhne,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica Neue,Arial,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji',
         height: '100%',
         overflowY: 'auto'
       }
@@ -68,7 +101,17 @@ export const theme = extendTheme({
     '2xl': '18px',
     '3xl': '22px'
   },
+  colors: {
+    divider: {
+      100: '#E5E7E9'
+    }
+  },
+  borders: {
+    base: '1px solid #E5E7E9',
+    md: '1px solid #DDE3E8'
+  },
   components: {
-    Button
+    Button,
+    Input
   }
 });

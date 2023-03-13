@@ -7,15 +7,15 @@ import { jsonRes } from '@/services/backend/response';
 // get App Metrics By DeployName. compute average value
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   try {
-    const session = await authSession(req.headers);
-
     const { name } = req.query;
 
     if (!name) {
       throw new Error('Name is empty');
     }
 
-    const { k8sCore, namespace, metricsClient } = await getK8s({ kubeconfig: session.kubeconfig });
+    const { k8sCore, namespace } = await getK8s({
+      kubeconfig: await authSession(req.headers)
+    });
 
     // get pods
     const {
@@ -28,6 +28,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       undefined,
       `app=${name}`
     );
+
+    // pods.forEach((pod) => {
+    //   pod.spec?.volumes?.forEach(async (item) => {
+    //     if (!item.persistentVolumeClaim) return;
+    //     const claimName = item?.persistentVolumeClaim?.claimName;
+    //     const claim = await k8sCore.readNamespacedPersistentVolumeClaim(claimName, namespace);
+    //     const pvName = claim.body?.spec?.volumeName;
+    //     if (!pvName) return;
+    //     // const pv = await k8sCore.readPersistentVolume(pvName);
+    //     // const pvStatus = pv.body.status;
+    //     console.log(claimName, pvName);
+    //   });
+    // });
+    // k8sCore.readNamespacedPersistentVolumeClaim('test-test', namespace).then((res) => {
+    //   console.log(res.body.status);
+    // });
 
     jsonRes(res, {
       data: pods
