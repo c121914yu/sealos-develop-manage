@@ -201,6 +201,7 @@ const EditApp = ({ appName }: { appName?: string }) => {
       >
         <Header
           title={title}
+          yamlList={yamlList}
           applyBtnText={applyBtnText}
           applyCb={() => formHook.handleSubmit(openConfirm(submitSuccess), submitError)()}
           activeType={showType}

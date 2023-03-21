@@ -19,7 +19,7 @@ import { defaultEditVal } from '@/constants/editApp';
 
 export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
   return {
-    id: app.metadata?.uid || `${Date.now()}`,
+    id: app.metadata?.uid || ``,
     name: app.metadata?.name || 'app name',
     status:
       app.status?.readyReplicas === app.status?.replicas
@@ -48,8 +48,10 @@ export const adaptPod = (pod: V1Pod): PodDetailType => {
     ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses ? pod.status?.containerStatuses[0].restartCount : 0,
     age: formatPodTime(pod.metadata?.creationTimestamp || new Date()),
-    cpu: new Array(30).fill(0),
-    memory: new Array(30).fill(0)
+    usedCpu: new Array(30).fill(0),
+    usedMemory: new Array(30).fill(0),
+    cpu: cpuFormatToM(pod.spec?.containers?.[0]?.resources?.limits?.cpu || '0'),
+    memory: memoryFormatToMi(pod.spec?.containers?.[0]?.resources?.limits?.memory || '0')
   };
 };
 
@@ -95,6 +97,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
   const domain = deployKindsMap?.Ingress?.spec?.rules?.[0].host;
 
   return {
+    id: deployKindsMap.Deployment.metadata?.uid || ``,
     appName: deployKindsMap.Deployment.metadata?.name || '无法获取APP Name',
     createTime: dayjs(deployKindsMap.Deployment.metadata?.creationTimestamp).format(
       'YYYY-MM-DD hh:mm'

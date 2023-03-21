@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -13,27 +13,49 @@ import {
   CircularProgress,
   CircularProgressLabel
 } from '@chakra-ui/react';
+import { restartPodByName } from '@/api/app';
 import type { PodDetailType } from '@/types/app';
 import { useLoading } from '@/hooks/useLoading';
+import { useToast } from '@/hooks/useToast';
 import PodLineChart from '@/components/PodLineChart';
 import dynamic from 'next/dynamic';
 import MyIcon from '@/components/Icon';
 import { PodStatusEnum } from '@/constants/app';
-import { printMemory } from '@/utils/tools';
+import { useConfirm } from '@/hooks/useConfirm';
 
 const Logs = dynamic(() => import('./Logs'));
+const DetailModel = dynamic(() => import('./PodDetailModal'));
 
-const Pods = ({
-  pods = [],
-  loading,
-  appCpu
-}: {
-  pods: PodDetailType[];
-  loading: boolean;
-  appCpu?: number;
-}) => {
+const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean }) => {
+  const { toast } = useToast();
   const [logsPod, setLogsPod] = useState<string>();
+  const [detailPodIndex, setDetailPodIndex] = useState<number>();
   const { Loading } = useLoading();
+  const [restartLoading, setRestartLoading] = useState<string[]>([]);
+  const { openConfirm: openConfirmRestart, ConfirmChild: RestartConfirmChild } = useConfirm({
+    content: '重启 Pod 会导致存储内容丢失，请确认！'
+  });
+
+  const handleRestartPod = useCallback(
+    async (podName: string) => {
+      setRestartLoading((state) => state.concat(podName));
+      try {
+        await restartPodByName(podName);
+        toast({
+          title: `重启 ${podName} 成功`,
+          status: 'success'
+        });
+      } catch (err) {
+        toast({
+          title: `重启 ${podName} 出现异常`,
+          status: 'warning'
+        });
+        console.log(err);
+      }
+      setRestartLoading((state) => state.filter((item) => item !== podName));
+    },
+    [toast]
+  );
 
   const columns: {
     title: string;
@@ -41,6 +63,11 @@ const Pods = ({
     key: string;
     render?: (item: PodDetailType) => JSX.Element | string;
   }[] = [
+    {
+      title: 'Pod Name',
+      key: 'podName',
+      dataIndex: 'podName'
+    },
     {
       title: 'Restarts',
       key: 'restarts',
@@ -56,7 +83,7 @@ const Pods = ({
       key: 'cpu',
       render: (item: PodDetailType) => (
         <Box h={'35px'} w={'90px'}>
-          {appCpu && <PodLineChart type="cpu" cpu={appCpu} data={item.cpu.slice(-6)} />}
+          <PodLineChart type="cpu" cpu={item.cpu} data={item.usedCpu.slice(-6)} />
         </Box>
       )
     },
@@ -65,19 +92,19 @@ const Pods = ({
       key: 'memory',
       render: (item: PodDetailType) => (
         <Box h={'35px'} w={'90px'}>
-          <PodLineChart type="memory" data={item.memory.slice(-6)} />
+          <PodLineChart type="memory" data={item.usedMemory.slice(-6)} />
         </Box>
       )
     },
-    {
-      title: '存储使用量',
-      key: 'store',
-      render: (item: PodDetailType) => (
-        <CircularProgress value={40} color="blue.500">
-          <CircularProgressLabel>40%</CircularProgressLabel>
-        </CircularProgress>
-      )
-    },
+    // {
+    //   title: '存储使用量',
+    //   key: 'store',
+    //   render: (item: PodDetailType) => (
+    //     <CircularProgress value={40} color="blue.500">
+    //       <CircularProgressLabel>40%</CircularProgressLabel>
+    //     </CircularProgress>
+    //   )
+    // },
     {
       title: '状态',
       key: 'status',
@@ -87,13 +114,24 @@ const Pods = ({
       title: '操作',
       key: 'control',
       render: (item: PodDetailType) => (
-        <Button
-          variant={'base'}
-          onClick={() => setLogsPod(item.podName)}
-          isDisabled={item.status.value !== PodStatusEnum.Running}
-        >
-          日志
-        </Button>
+        <Flex>
+          <Button
+            mr={2}
+            colorScheme={'blue'}
+            variant={'outline'}
+            isDisabled={item.status.value !== PodStatusEnum.Running}
+            onClick={() => setLogsPod(item.podName)}
+          >
+            日志
+          </Button>
+          <Button
+            variant={'base'}
+            isLoading={restartLoading.includes(item.podName)}
+            onClick={openConfirmRestart(() => handleRestartPod(item.podName))}
+          >
+            重启
+          </Button>
+        </Flex>
       )
     }
   ];
@@ -120,9 +158,25 @@ const Pods = ({
           </Thead>
           <Tbody>
             {pods.map((app) => (
-              <Tr key={app.podName}>
-                {columns.map((col) => (
-                  <Td key={col.key}>
+              <Tr
+                key={app.podName}
+                cursor={'pointer'}
+                _hover={{
+                  backgroundColor: 'gray.50'
+                }}
+                onClick={() =>
+                  setDetailPodIndex(pods.findIndex((item) => item.podName === app.podName))
+                }
+              >
+                {columns.map((col, i) => (
+                  <Td
+                    key={col.key}
+                    onClick={(e) => {
+                      if (i === columns.length - 1) {
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
                     {col.render ? col.render(app) : col.dataIndex ? `${app[col.dataIndex]}` : ''}
                   </Td>
                 ))}
@@ -142,6 +196,17 @@ const Pods = ({
           closeFn={() => setLogsPod(undefined)}
         />
       )}
+      {detailPodIndex !== undefined && (
+        <DetailModel
+          pod={pods[detailPodIndex]}
+          podNames={pods.map((item) => item.podName)}
+          setPodDetail={(e: string) =>
+            setDetailPodIndex(pods.findIndex((item) => item.podName === e))
+          }
+          closeFn={() => setDetailPodIndex(undefined)}
+        />
+      )}
+      <RestartConfirmChild />
     </Box>
   );
 };

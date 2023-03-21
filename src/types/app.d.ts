@@ -84,6 +84,7 @@ export interface AppEditType {
 }
 
 export interface AppDetailType extends AppEditType {
+  id: string;
   createTime: string;
   status: AppStatusMapType;
   imageName: string;
@@ -104,8 +105,10 @@ export interface PodDetailType {
   ip: string;
   restarts: number;
   age: string;
-  cpu: number[];
-  memory: number[];
+  usedCpu: number[];
+  usedMemory: number[];
+  cpu: number;
+  memory: number;
 }
 export interface PodMetrics {
   podName: string;

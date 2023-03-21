@@ -99,7 +99,7 @@ export const cpuFormatToM = (cpu: string) => {
   } else {
     value = value * 1000;
   }
-  if (value < 0.01) return 0;
+  if (value < 0.1) return 0;
   return Number(value.toFixed(4));
 };
 
@@ -170,3 +170,22 @@ export const formatPodTime = (createTimeStamp: Date) => {
   }
   return `${seconds}s`;
 };
+
+/**
+ * 下载文件到本地
+ */
+export function downLoadBold(content: BlobPart, type: string, fileName: string) {
+  // 创建一个 Blob 对象
+  const blob = new Blob([content], { type });
+
+  // 创建一个 URL 对象
+  const url = URL.createObjectURL(blob);
+
+  // 创建一个 a 标签
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+
+  // 模拟点击 a 标签下载文件
+  link.click();
+}

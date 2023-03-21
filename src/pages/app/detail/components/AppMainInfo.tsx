@@ -2,7 +2,8 @@ import React, { useMemo } from 'react';
 import { Box, Flex, Grid } from '@chakra-ui/react';
 import type { AppDetailType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
-import { useCopyData, printMemory } from '@/utils/tools';
+import { useCopyData } from '@/utils/tools';
+import dayjs from 'dayjs';
 
 const AppMainInfo = ({ app }: { app: AppDetailType }) => {
   if (!app) return null;
@@ -20,7 +21,12 @@ const AppMainInfo = ({ app }: { app: AppDetailType }) => {
   return (
     <Box px={4} py={6} position={'relative'}>
       <>
-        <Box>实时监控</Box>
+        <Flex alignItems={'flex-end'}>
+          <Box>实时监控</Box>
+          <Box ml={2} color={'blackAlpha.500'} fontSize={'sm'}>
+            (更新时间{dayjs().format('hh:mm:ss')})
+          </Box>
+        </Flex>
         <Grid
           w={'100%'}
           templateColumns={'1fr 1fr'}
@@ -79,6 +85,7 @@ const AppMainInfo = ({ app }: { app: AppDetailType }) => {
                 w={0}
                 userSelect={'none'}
                 cursor={'pointer'}
+                color={'black'}
                 onClick={() => copyData(item.value)}
               >
                 {item.value}

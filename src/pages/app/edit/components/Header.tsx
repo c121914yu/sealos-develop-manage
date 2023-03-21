@@ -1,8 +1,11 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, useCallback } from 'react';
 import { Box, Flex, Button } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import type { EditType } from '@/types/app';
 import MyIcon from '@/components/Icon';
+import JSZip from 'jszip';
+import type { YamlItemType } from '@/types/index';
+import { downLoadBold } from '@/utils/tools';
 
 const BtnList: {
   label: string;
@@ -20,18 +23,30 @@ const BtnList: {
 
 const Header = ({
   title,
+  yamlList,
   applyCb,
   applyBtnText,
   activeType,
   setActiveType
 }: {
   title: string;
+  yamlList: YamlItemType[];
   applyCb: () => void;
   applyBtnText: string;
   activeType: EditType;
   setActiveType: Dispatch<EditType>;
 }) => {
   const router = useRouter();
+
+  const handleExportYaml = useCallback(async () => {
+    const zip = new JSZip();
+    yamlList.forEach((item) => {
+      zip.file(item.filename, item.value);
+    });
+    const res = await zip.generateAsync({ type: 'blob' });
+    downLoadBold(res, 'application/zip', 'yaml.zip');
+  }, [yamlList]);
+
   return (
     <Box w={'100%'}>
       <Flex px={10} py={4} alignItems={'center'} justifyContent={'space-between'}>
@@ -50,7 +65,13 @@ const Header = ({
         <Box fontWeight={'bold'} fontSize={'lg'} ml={4}>
           配置表单
         </Box>
-        <Button ml={6} size={'sm'} colorScheme={'gray'} variant={'outline'}>
+        <Button
+          ml={6}
+          size={'sm'}
+          colorScheme={'gray'}
+          variant={'outline'}
+          onClick={handleExportYaml}
+        >
           导出 Yaml
         </Button>
         <Box flex={1}></Box>

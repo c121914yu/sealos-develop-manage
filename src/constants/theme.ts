@@ -42,7 +42,7 @@ const Button = defineStyleConfig({
     base: {
       backgroundColor: '#EAEEF1',
       color: '#54585C',
-      px: 5,
+      px: 6,
       py: 1,
       _hover: {
         filter: 'brightness(95%)'

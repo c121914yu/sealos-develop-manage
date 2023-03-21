@@ -57,8 +57,8 @@ export const useAppStore = create<State>()(
 
             return {
               ...pod,
-              cpu: oldPod ? oldPod.cpu : pod.cpu,
-              memory: oldPod ? oldPod.memory : pod.memory
+              usedCpu: oldPod ? oldPod.usedCpu : pod.usedCpu,
+              usedMemory: oldPod ? oldPod.usedMemory : pod.usedMemory
             };
           });
 
@@ -86,8 +86,8 @@ export const useAppStore = create<State>()(
 
                 return {
                   ...pod,
-                  cpu: [...pod.cpu.slice(1), currentCpu],
-                  memory: [...pod.memory.slice(1), currentMemory]
+                  usedCpu: [...pod.usedCpu.slice(1), currentCpu],
+                  usedMemory: [...pod.usedMemory.slice(1), currentMemory]
                 };
               });
 

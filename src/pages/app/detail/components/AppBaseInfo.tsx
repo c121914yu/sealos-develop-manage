@@ -115,7 +115,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
                   mt: 4
                 }}
               >
-                <Box flex={'0 0 120px'} w={0} color={'blackAlpha.800'}>
+                <Box flex={'0 0 110px'} w={0} color={'blackAlpha.800'}>
                   {item.label}
                 </Box>
                 <Box
@@ -155,7 +155,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
               }}
               px={4}
             >
-              <Box flex={'0 0 120px'} w={0} color={'blackAlpha.800'}>
+              <Box flex={'0 0 110px'} w={0} color={'blackAlpha.800'}>
                 {item.label}
               </Box>
               <Box
@@ -187,7 +187,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
               <AccordionPanel py={0}>
                 {app.envs.map((env) => (
                   <Flex key={env.key} _notLast={{ mb: 3 }}>
-                    <Box flex={'0 0 120px'} w={0} color={'blackAlpha.800'}>
+                    <Box flex={'0 0 110px'} w={0} color={'blackAlpha.800'}>
                       {env.key}
                     </Box>
                     <Box

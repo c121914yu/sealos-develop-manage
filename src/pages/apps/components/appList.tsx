@@ -93,13 +93,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
       title: '操作',
       key: 'control',
       render: (item: AppListItemType) => (
-        <Button
-          variant={'base'}
-          onClick={(e) => {
-            router.push(`/app/edit?name=${item.name}`);
-            e.stopPropagation();
-          }}
-        >
+        <Button variant={'base'} onClick={(e) => router.push(`/app/edit?name=${item.name}`)}>
           变更
         </Button>
       )
@@ -143,8 +137,15 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
                   router.push(`/app/detail?name=${app.name}`);
                 }}
               >
-                {columns.map((col) => (
-                  <Td key={col.key}>
+                {columns.map((col, i) => (
+                  <Td
+                    key={col.key}
+                    onClick={(e) => {
+                      if (i === columns.length - 1) {
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
                     {col.render ? col.render(app) : col.dataIndex ? `${app[col.dataIndex]}` : ''}
                   </Td>
                 ))}

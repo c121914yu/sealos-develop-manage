@@ -7,8 +7,10 @@ import { useToast } from '@/hooks/useToast';
 import { useLoading } from '@/hooks/useLoading';
 import Header from './components/Header';
 import AppBaseInfo from './components/AppBaseInfo';
-import AppMainInfo from './components/AppMainInfo';
 import Pods from './components/Pods';
+import dynamic from 'next/dynamic';
+
+const AppMainInfo = dynamic(() => import('./components/AppMainInfo'), { ssr: false });
 
 const AppDetail = ({ appName }: { appName: string }) => {
   const { toast } = useToast();
@@ -38,7 +40,7 @@ const AppDetail = ({ appName }: { appName: string }) => {
   return (
     <Flex flexDirection={'column'} height={'100vh'} backgroundColor={'#f9f9f9'} px={4} pb={4}>
       <Box>
-        <Header appName={appName} appStatus={appDetail?.status} />
+        <Header appName={appName} appId={appDetail?.id} appStatus={appDetail?.status} />
       </Box>
       <Flex position={'relative'} flex={'1 0 0'} h={0}>
         <Card
@@ -64,7 +66,7 @@ const AppDetail = ({ appName }: { appName: string }) => {
             {appDetail ? <AppMainInfo app={appDetail} /> : <Loading loading={true} fixed={false} />}
           </Card>
           <Card flex={'1 0 0'} h={0} overflowY={'auto'}>
-            <Pods pods={appDetailPods} loading={!podsLoaded} appCpu={appDetail?.cpu} />
+            <Pods pods={appDetailPods} loading={!podsLoaded} />
           </Card>
         </Flex>
       </Flex>

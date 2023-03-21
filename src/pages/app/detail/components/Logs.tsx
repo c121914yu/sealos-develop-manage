@@ -37,13 +37,12 @@ const Logs = ({
   return (
     <Modal isOpen={true} onClose={closeFn} size={'sm'}>
       <ModalOverlay />
-      <ModalContent minH={'200px'} overflowY={'auto'} top={'10vh'} maxW={'50vw'}>
+      <ModalContent minH={'200px'} overflowY={'auto'} top={'10vh'} maxW={'90vw'}>
         <Flex p={4}>
           <Select
-            defaultValue={podName}
-            maxW={'30%'}
+            value={podName}
+            maxW={'200px'}
             size={'xs'}
-            autoFocus={false}
             onChange={(e) => {
               setLogsPodName(e.target.value);
             }}
