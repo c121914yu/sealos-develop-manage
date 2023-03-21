@@ -12,9 +12,10 @@ import {
 import type { PodDetailType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
 import { printMemory } from '@/utils/tools';
+import { MOCK_PODS } from '@/mock/apps';
 
 const Logs = ({
-  pod,
+  pod = MOCK_PODS[0],
   podNames = [],
   setPodDetail,
   closeFn
@@ -49,7 +50,7 @@ const Logs = ({
       <ModalContent h={'90vh'} m={0} top={'5vh'} maxW={'70vw'}>
         <Flex p={4} alignItems={'center'}>
           <Select
-            defaultValue={pod.podName}
+            value={pod.podName}
             maxW={'250px'}
             autoFocus={false}
             onChange={(e) => {

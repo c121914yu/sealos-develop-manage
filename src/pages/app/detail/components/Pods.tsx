@@ -24,7 +24,7 @@ import { PodStatusEnum } from '@/constants/app';
 import { useConfirm } from '@/hooks/useConfirm';
 
 const Logs = dynamic(() => import('./Logs'));
-const DetailModel = dynamic(() => import('./PodDetailModal'));
+const DetailModel = dynamic(() => import('./PodDetailModal'), { ssr: false });
 
 const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean }) => {
   const { toast } = useToast();

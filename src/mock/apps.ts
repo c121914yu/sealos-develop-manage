@@ -151,8 +151,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
   {
     podName: '2',
@@ -162,8 +164,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
   {
     podName: '3',
@@ -173,8 +177,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
 
   {
@@ -185,8 +191,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
 
   {
@@ -197,8 +205,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
   {
     podName: '6',
@@ -208,8 +218,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
   {
     podName: '7',
@@ -219,8 +231,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
   {
     podName: '8',
@@ -230,8 +244,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
 
   {
@@ -242,8 +258,10 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   },
 
   {
@@ -254,12 +272,15 @@ export const MOCK_PODS: PodDetailType[] = [
     restarts: 10,
     age: '22',
     status: podStatusMap.Running,
-    cpu: [323],
-    memory: [33]
+    usedCpu: [323],
+    usedMemory: [33],
+    cpu: 0,
+    memory: 0
   }
 ];
 
 export const MOCK_APP_DETAIL: AppDetailType = {
+  id: 'sss',
   createTime: '2022/1/22',
   status: appStatusMap.waiting,
   appName: '答复水电费收到受到',

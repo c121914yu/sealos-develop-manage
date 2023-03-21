@@ -40,6 +40,7 @@ const MyRangeSlider = ({
 
   return (
     <RangeSlider
+      // eslint-disable-next-line jsx-a11y/aria-proptypes
       aria-label={['min', 'max']}
       value={value}
       min={min}
