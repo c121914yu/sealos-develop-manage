@@ -23,7 +23,7 @@ import MyIcon from '@/components/Icon';
 import { PodStatusEnum } from '@/constants/app';
 import { useConfirm } from '@/hooks/useConfirm';
 
-const Logs = dynamic(() => import('./Logs'));
+const LogsModal = dynamic(() => import('./LogsModal'));
 const DetailModel = dynamic(() => import('./PodDetailModal'), { ssr: false });
 
 const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean }) => {
@@ -187,7 +187,7 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
       </TableContainer>
       <Loading loading={loading} fixed={false} />
       {!!logsPod && (
-        <Logs
+        <LogsModal
           podName={logsPod}
           podNames={pods
             .filter((pod) => pod.status.value === PodStatusEnum.Running)

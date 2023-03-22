@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useLoading } from '@/hooks/useLoading';
 
-const Logs = ({
+const LogsModal = ({
   podName,
   podNames = [],
   setLogsPodName,
@@ -41,7 +41,6 @@ const Logs = ({
           <Select
             value={podName}
             maxW={'200px'}
-            size={'xs'}
             onChange={(e) => {
               setLogsPodName(e.target.value);
             }}
@@ -70,4 +69,4 @@ const Logs = ({
   );
 };
 
-export default Logs;
+export default LogsModal;

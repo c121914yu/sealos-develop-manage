@@ -42,6 +42,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
         items: [
           { label: '创建时间', value: app.createTime },
           { label: `镜像名${app.secret.use ? '（私有）' : ''}`, value: app.imageName },
+          { label: `容器暴露端口`, value: `${app.containerOutPort}` },
           { label: 'Limit CPU', value: `${app.cpu / 1000} Core` },
           {
             label: 'Limit Memory',
@@ -72,8 +73,8 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
   const appTags = useMemo(
     () => [
       ...(app.accessExternal.use ? ['可外网访问'] : []),
-      ...(app.hpa.use ? ['HPA'] : []),
-      ...(app.storeList.length > 0 ? ['有状态的副本集'] : [])
+      ...(app.hpa.use ? ['弹性伸缩'] : ['固定实例']),
+      ...(app.storeList.length > 0 ? ['有状态'] : ['无状态'])
     ],
     [app]
   );
@@ -175,6 +176,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
           <Accordion allowToggle defaultIndex={0} mt={4}>
             <AccordionItem borderBottom={0}>
               <AccordionButton
+                py={4}
                 display={'flex'}
                 textAlign={'left'}
                 _hover={{ backgroundColor: 'transparent' }}
@@ -186,7 +188,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
               </AccordionButton>
               <AccordionPanel py={0}>
                 {app.envs.map((env) => (
-                  <Flex key={env.key} _notLast={{ mb: 3 }}>
+                  <Flex key={env.key} mb={3}>
                     <Box flex={'0 0 110px'} w={0} color={'blackAlpha.800'}>
                       {env.key}
                     </Box>
@@ -207,11 +209,12 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
             </AccordionItem>
           </Accordion>
           {/* configMap */}
-          <Accordion allowToggle defaultIndex={0} mt={4}>
+          <Accordion allowToggle defaultIndex={0}>
             <AccordionItem borderBottom={0}>
               <AccordionButton
                 display={'flex'}
                 textAlign={'left'}
+                py={4}
                 _hover={{ backgroundColor: 'transparent' }}
               >
                 <Box flex={1} color={'blackAlpha.800'}>
@@ -221,7 +224,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
               </AccordionButton>
               <AccordionPanel py={0}>
                 {app.configMapList.map((item) => (
-                  <Flex key={item.mountPath} _notLast={{ mb: 3 }}>
+                  <Flex key={item.mountPath} mb={3}>
                     <Box flex={'1 0 0'} w={0} color={'blackAlpha.800'}>
                       {item.mountPath}
                     </Box>
@@ -239,11 +242,12 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
             </AccordionItem>
           </Accordion>
           {/* store */}
-          <Accordion allowToggle defaultIndex={0} mt={4}>
+          <Accordion allowToggle defaultIndex={0}>
             <AccordionItem borderBottom={0}>
               <AccordionButton
                 display={'flex'}
                 textAlign={'left'}
+                py={4}
                 _hover={{ backgroundColor: 'transparent' }}
               >
                 <Box flex={1} color={'blackAlpha.800'}>
@@ -253,7 +257,7 @@ const AppBaseInfo = ({ app }: { app: AppDetailType }) => {
               </AccordionButton>
               <AccordionPanel py={0}>
                 {app.storeList.map((store) => (
-                  <Flex key={store.path} _notLast={{ mb: 3 }}>
+                  <Flex key={store.path} mb={3}>
                     <Box flex={1} w={0} color={'blackAlpha.800'}>
                       {store.path}
                     </Box>

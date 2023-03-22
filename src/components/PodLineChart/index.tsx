@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { printMemory } from '@/utils/tools';
+import { useGlobalStore } from '@/store/global';
 
 const PodLineChart = ({
   type,
@@ -11,6 +12,8 @@ const PodLineChart = ({
   cpu?: number;
   data: number[];
 }) => {
+  const { screenWidth } = useGlobalStore();
+
   const Dom = useRef<HTMLDivElement>(null);
   const myChart = useRef<echarts.ECharts>();
 
@@ -76,19 +79,25 @@ const PodLineChart = ({
   });
 
   useEffect(() => {
-    if (!Dom.current) return;
+    if (!Dom.current || myChart?.current?.getOption()) return;
     myChart.current = echarts.init(Dom.current);
     myChart.current && myChart.current.setOption(option.current);
   }, [Dom]);
 
   // data changed, update
   useEffect(() => {
-    if (!myChart.current) return;
+    if (!myChart.current || !myChart?.current?.getOption()) return;
     const x = option.current.xAxis.data;
     option.current.xAxis.data = [...x.slice(1), x[x.length - 1] + 1];
     option.current.series[0].data = data;
     myChart.current.setOption(option.current);
   }, [data]);
+
+  // resize chart
+  useEffect(() => {
+    if (!myChart.current || !myChart.current.getOption()) return;
+    myChart.current.resize();
+  }, [screenWidth]);
 
   return <div ref={Dom} style={{ width: '100%', height: '100%' }} />;
 };

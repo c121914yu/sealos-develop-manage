@@ -68,9 +68,11 @@ export async function CreateYaml(
       created.push(response.body);
     }
   } catch (error: any) {
+    console.log('create error');
     /* delete success specs */
     for (const spec of created) {
       try {
+        console.log('delete:', spec.kind);
         client.delete(spec);
       } catch (error) {
         error;
@@ -147,6 +149,8 @@ export function GetUserDefaultNameSpace(user: string): string {
 export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
   const kc = K8sApi(kubeconfig);
   const kube_user = kc.getCurrentUser();
+  const client = k8s.KubernetesObjectApi.makeApiClient(kc);
+
   if (kube_user === null) {
     return Promise.reject('用户不存在');
   }
@@ -179,10 +183,12 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
 
   return Promise.resolve({
     kc,
+    apiClient: client,
     k8sCore: kc.makeApiClient(k8s.CoreV1Api),
     k8sApp: kc.makeApiClient(k8s.AppsV1Api),
     k8sAutoscaling: kc.makeApiClient(k8s.AutoscalingV1Api),
     k8sNetworkingApp: kc.makeApiClient(k8s.NetworkingV1Api),
+    k8sCustomObjects: kc.makeApiClient(k8s.CustomObjectsApi),
     metricsClient: new k8s.Metrics(kc),
     kube_user,
     namespace,

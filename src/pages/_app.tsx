@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import Head from 'next/head';
 import type { AppProps } from 'next/app';
-import Script from 'next/script';
 import { ChakraProvider } from '@chakra-ui/react';
 import { theme } from '@/constants/theme';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,6 +8,8 @@ import Router from 'next/router';
 import NProgress from 'nprogress'; //nprogress module
 import { sealosApp, createSealosApp } from 'sealos-desktop-sdk/app';
 import { useConfirm } from '@/hooks/useConfirm';
+import throttle from 'lodash/throttle';
+import { useGlobalStore } from '@/store/global';
 import 'nprogress/nprogress.css';
 import '@/styles/reset.scss';
 
@@ -29,6 +30,7 @@ const queryClient = new QueryClient({
 });
 
 export default function App({ Component, pageProps }: AppProps) {
+  const { setScreenWidth } = useGlobalStore();
   const { openConfirm, ConfirmChild } = useConfirm({
     title: '跳转提示',
     content: '该应用不允许单独使用，点击确认前往 Sealos Desktop 使用。'
@@ -54,7 +56,20 @@ export default function App({ Component, pageProps }: AppProps) {
     NProgress.done();
 
     return response;
-  }, []);
+  }, [openConfirm]);
+
+  // add resize event
+  useEffect(() => {
+    const resize = throttle((e: Event) => {
+      const documentWidth = document.documentElement.clientWidth || document.body.clientWidth;
+      setScreenWidth(documentWidth);
+    }, 200);
+    window.addEventListener('resize', resize);
+
+    return () => {
+      window.removeEventListener('resize', resize);
+    };
+  }, [setScreenWidth]);
 
   return (
     <>

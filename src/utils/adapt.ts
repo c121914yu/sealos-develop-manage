@@ -16,6 +16,9 @@ import { appStatusMap, podStatusMap } from '@/constants/app';
 import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
 import { defaultEditVal } from '@/constants/editApp';
+import { customAlphabet } from 'nanoid';
+
+const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 12);
 
 export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
   return {
@@ -68,6 +71,8 @@ export enum YamlKindEnum {
   ConfigMap = 'ConfigMap',
   Deployment = 'Deployment',
   Ingress = 'Ingress',
+  Issuer = 'Issuer',
+  Certificate = 'Certificate',
   HorizontalPodAutoscaler = 'HorizontalPodAutoscaler',
   Secret = 'Secret',
   PersistentVolumeClaim = 'PersistentVolumeClaim'
@@ -124,8 +129,10 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
           backendProtocol: deployKindsMap.Ingress.metadata?.annotations?.[
             'nginx.ingress.kubernetes.io/backend-protocol'
           ] as AppEditType['accessExternal']['backendProtocol'],
-          outDomain: domain?.split('.')[0] || '',
-          selfDomain: ''
+          outDomain: domain?.endsWith('cloud.sealos.io')
+            ? domain?.split('.')[0] || nanoid()
+            : nanoid(),
+          selfDomain: domain?.endsWith('cloud.sealos.io') ? '' : domain || ''
         }
       : defaultEditVal.accessExternal,
     containerOutPort:

@@ -20,6 +20,7 @@ export const json2Development = (data: AppEditType) => {
     },
     spec: {
       replicas: str2Num(data.replicas),
+      revisionHistoryLimit: 1,
       selector: {
         matchLabels: {
           app: data.appName
@@ -156,7 +157,14 @@ export const json2Service = (data: AppEditType) => {
 };
 
 export const json2Ingress = (data: AppEditType) => {
-  const template = {
+  const host = data.accessExternal.selfDomain
+    ? data.accessExternal.selfDomain
+    : `${data.accessExternal.outDomain}.cloud.sealos.io`;
+  const secretName = data.accessExternal.selfDomain
+    ? data.appName
+    : 'wildcard-cloud-sealos-io-cert';
+
+  const ingress = {
     apiVersion: 'networking.k8s.io/v1',
     kind: 'Ingress',
     metadata: {
@@ -174,7 +182,7 @@ export const json2Ingress = (data: AppEditType) => {
     spec: {
       rules: [
         {
-          host: `${data.accessExternal.outDomain}.cloud.sealos.io`,
+          host: host,
           http: {
             paths: [
               {
@@ -195,13 +203,57 @@ export const json2Ingress = (data: AppEditType) => {
       ],
       tls: [
         {
-          hosts: [`${data.accessExternal.outDomain}.cloud.sealos.io`],
-          secretName: 'wildcard-cloud-sealos-io-cert'
+          hosts: [host],
+          secretName
         }
       ]
     }
   };
-  return yaml.dump(template);
+  const issuer = {
+    apiVersion: 'cert-manager.io/v1',
+    kind: 'Issuer',
+    metadata: {
+      name: data.appName
+    },
+    spec: {
+      acme: {
+        server: 'https://acme-v02.api.letsencrypt.org/directory',
+        email: 'admin@sealos.io',
+        privateKeySecretRef: {
+          name: 'letsencrypt-prod'
+        },
+        solvers: [
+          {
+            http01: {
+              ingress: {
+                class: 'nginx'
+              }
+            }
+          }
+        ]
+      }
+    }
+  };
+  const certificate = {
+    apiVersion: 'cert-manager.io/v1',
+    kind: 'Certificate',
+    metadata: {
+      name: data.appName
+    },
+    spec: {
+      secretName,
+      dnsNames: [data.accessExternal.selfDomain],
+      issuerRef: {
+        name: data.appName,
+        kind: 'Issuer'
+      }
+    }
+  };
+  let resYaml = yaml.dump(ingress);
+  if (data.accessExternal.selfDomain) {
+    resYaml += `\n---\n${yaml.dump(issuer)}\n---\n${yaml.dump(certificate)}`;
+  }
+  return resYaml;
 };
 
 export const json2ConfigMap = (data: AppEditType) => {

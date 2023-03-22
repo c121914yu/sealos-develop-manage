@@ -4,6 +4,7 @@ import type { AppDetailType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
 import { useCopyData } from '@/utils/tools';
 import dayjs from 'dayjs';
+import { getUserNamespace } from '@/utils/user';
 
 const AppMainInfo = ({ app }: { app: AppDetailType }) => {
   if (!app) return null;
@@ -58,13 +59,15 @@ const AppMainInfo = ({ app }: { app: AppDetailType }) => {
           {[
             {
               label: '内网地址',
-              value: 'https://terminal-aivfcfvw.ns-aivfcfvw.svc.cluster.local:3000'
+              value: `http://${app.appName}.${getUserNamespace()}.svc.cluster.local:${
+                app.containerOutPort
+              }`
             },
             {
               label: '外网地址',
               value: app.accessExternal.use
                 ? app.accessExternal.selfDomain || `${app.accessExternal.outDomain}.cloud.sealos.io`
-                : ''
+                : '未开启'
             }
           ].map((item) => (
             <Flex

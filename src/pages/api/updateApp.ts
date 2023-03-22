@@ -17,11 +17,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
   try {
-    const { applyYamlList, k8sCore, k8sNetworkingApp, k8sAutoscaling, namespace } = await getK8s({
+    const {
+      applyYamlList,
+      k8sCore,
+      k8sNetworkingApp,
+      k8sAutoscaling,
+      k8sCustomObjects,
+      namespace
+    } = await getK8s({
       kubeconfig: await authSession(req.headers)
     });
 
-    // Compare YAMLs and delete YAMLs that are not there
+    // Resources that may need to be deleted
     const deleteArr = [
       {
         kind: YamlKindEnum.ConfigMap,
@@ -30,6 +37,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       {
         kind: YamlKindEnum.Ingress,
         delApi: () => k8sNetworkingApp.deleteNamespacedIngress(appName, namespace)
+      },
+      {
+        kind: YamlKindEnum.Issuer,
+        delApi: () =>
+          k8sCustomObjects.deleteNamespacedCustomObject(
+            'cert-manager.io',
+            'v1',
+            namespace,
+            'issuers',
+            appName
+          )
+      },
+      {
+        kind: YamlKindEnum.Certificate,
+        delApi: () =>
+          k8sCustomObjects.deleteNamespacedCustomObject(
+            'cert-manager.io',
+            'v1',
+            namespace,
+            'certificates',
+            appName
+          )
       },
       {
         kind: YamlKindEnum.HorizontalPodAutoscaler,
@@ -41,8 +70,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       }
     ];
 
+    // load all yaml to json
     const jsonYaml = yamlList.map((item) => yaml.loadAll(item)).flat() as DeployKindsType[];
 
+    // Compare kind, filter out the resources to be deleted
     const delArr = deleteArr.filter(
       (item) => !jsonYaml.find((yaml: any) => yaml.kind === item.kind)
     );
@@ -64,12 +95,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         `app=${appName}`
       )
       .then((res) => res.body.items.filter((item) => !item.metadata?.deletionTimestamp));
-    // delete pv
+    // filter out the active pv but not in applyYaml
     const removedPv = response.filter((item) => {
       const path = item.metadata?.annotations?.path;
       if (!path) return false;
       return !jsonYaml.find((yaml: any) => yaml?.metadata?.annotations?.path === path);
     });
+    // delete pv
     await Promise.allSettled(
       removedPv.map((item) =>
         k8sCore.deleteNamespacedPersistentVolumeClaim(item?.metadata?.name as string, namespace)
@@ -77,13 +109,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     );
     console.log(`delete pv: ${removedPv.map((item) => item?.metadata?.name)}`);
 
-    // filter
+    // Filter out YAMLs that need to be applied
     const applyYaml = jsonYaml
       .filter((item) => {
-        if (item?.kind !== YamlKindEnum.PersistentVolumeClaim) return true;
-        return !response.find(
-          (yaml) => yaml?.metadata?.annotations?.path === item?.metadata?.annotations?.path
-        );
+        if (item?.kind === YamlKindEnum.PersistentVolumeClaim) {
+          // just apply new pv
+          return !response.find(
+            (yaml) => yaml?.metadata?.annotations?.path === item?.metadata?.annotations?.path
+          );
+        }
+        return true;
       })
       .map((item) => yaml.dump(item));
 

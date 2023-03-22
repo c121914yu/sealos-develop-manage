@@ -257,7 +257,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                 </Box>
               </Box>
 
-              <Flex mb={10} alignItems={'center'}>
+              <Flex mb={10} pr={3} alignItems={'center'}>
                 <Label w={100}>CPU(Core)</Label>
                 <MySlider
                   markList={CpuSlideMarkList}
@@ -270,7 +270,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                   step={1}
                 />
               </Flex>
-              <Flex mb={12} alignItems={'center'}>
+              <Flex mb={12} pr={3} alignItems={'center'}>
                 <Label w={100}>Memory</Label>
                 <MySlider
                   markList={MemorySlideMarkList}
@@ -334,7 +334,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                       <Box>%</Box>
                     </Flex>
 
-                    <Flex mt={7} pb={8} alignItems={'center'}>
+                    <Flex mt={7} pb={8} pr={3} alignItems={'center'}>
                       <Label w={100}>实例数</Label>
                       <MyRangeSlider
                         min={1}
@@ -425,8 +425,8 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                       <Flex alignItems={'center'}>
                         <Box flex={'0 0 80px'}>协议</Box>
                         <Select flex={1} {...register('accessExternal.backendProtocol')}>
-                          <option value="HTTP">HTTP</option>
-                          <option value="GRPC">GRPC</option>
+                          <option value="HTTP">https</option>
+                          <option value="GRPC">grpcs</option>
                         </Select>
                       </Flex>
                     </FormControl>
