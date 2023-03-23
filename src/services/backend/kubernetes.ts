@@ -102,10 +102,16 @@ export async function replaceYaml(
 
     try {
       // @ts-ignore
-      await client.read(spec);
+      const { body } = await client.read(spec);
       console.log('replace yaml: ', spec.kind);
       // update resource
-      const response = await client.replace(spec);
+      const response = await client.replace({
+        ...spec,
+        metadata: {
+          ...spec.metadata,
+          resourceVersion: body.metadata?.resourceVersion
+        }
+      });
       succeed.push(response.body);
     } catch (e: any) {
       // console.error(e?.body || e, "<=replace error")

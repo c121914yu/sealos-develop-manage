@@ -49,6 +49,9 @@ const Logs = ({
       <ModalOverlay />
       <ModalContent h={'90vh'} m={0} top={'5vh'} maxW={'70vw'}>
         <Flex p={4} alignItems={'center'}>
+          <Box mr={3} fontSize={'xl'} fontWeight={'bold'}>
+            Pod 详情
+          </Box>
           <Select
             value={pod.podName}
             maxW={'250px'}
@@ -63,9 +66,6 @@ const Logs = ({
               </option>
             ))}
           </Select>
-          <Box ml={3} fontSize={'xl'} fontWeight={'bold'}>
-            详情
-          </Box>
         </Flex>
         <ModalCloseButton />
         <ModalBody

@@ -39,15 +39,18 @@ export const str2Num = (str?: string | number) => {
 };
 
 /**
- * 格式化路径以 ./ 开头
+ * add ./ in path
  */
 export const pathFormat = (str: string) => {
   if (str.startsWith('/')) return `.${str}`;
   return `./${str}`;
 };
 export const pathToNameFormat = (str: string) => {
-  if (!str.startsWith('/')) return str.replace(/(\/|\.)/g, '-');
-  return str.substring(1).replace(/(\/|\.)/g, '-');
+  if (!str.startsWith('/')) return str.replace(/(\/|\.)/g, '-').toLocaleLowerCase();
+  return str
+    .substring(1)
+    .replace(/(\/|\.)/g, '-')
+    .toLocaleLowerCase();
 };
 
 /**

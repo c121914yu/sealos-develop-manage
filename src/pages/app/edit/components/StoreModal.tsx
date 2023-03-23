@@ -19,6 +19,7 @@ import {
   Tooltip
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
+import MyFormControl from '@/components/FormControl';
 
 export type StoreType = {
   id?: string;
@@ -31,10 +32,12 @@ const StoreModal = ({
     path: '',
     value: 1
   },
+  listNames,
   successCb,
   closeCb
 }: {
   defaultValue?: StoreType;
+  listNames: string[];
   successCb: (e: StoreType) => void;
   closeCb: () => void;
 }) => {
@@ -98,15 +101,25 @@ const StoreModal = ({
                 </NumberInput>
               </Tooltip>
             </FormControl>
-            <FormControl mb={5} isInvalid={!!errors.path}>
+            <MyFormControl showError errorText={errors.path?.message} pb={0}>
               <Box mb={1}>挂载路径</Box>
               <Input
                 placeholder="如：/data"
                 {...register('path', {
-                  required: '挂载路径不能为空'
+                  required: '挂载路径不能为空',
+                  pattern: {
+                    value: /^[0-9a-zA-Z/][0-9a-zA-Z/.-]*[0-9a-zA-Z/]$/,
+                    message: `挂在路径需满足: [a-z0-9]([-a-z0-9]*[a-z0-9])?`
+                  },
+                  validate: (e) => {
+                    if (listNames.includes(e.toLocaleLowerCase())) {
+                      return '与其他存储路径冲突';
+                    }
+                    return true;
+                  }
                 })}
               />
-            </FormControl>
+            </MyFormControl>
           </ModalBody>
 
           <ModalFooter>

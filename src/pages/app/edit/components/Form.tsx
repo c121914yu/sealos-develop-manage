@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -24,17 +24,29 @@ import RangeInput from '@/components/RangeInput';
 import MySlider from '@/components/Slider';
 import MyRangeSlider from '@/components/RangeSlider';
 import MyIcon from '@/components/Icon';
-import ConfigmapModal, { ConfigMapType } from './ConfigmapModal';
-import StoreModal, { StoreType } from './StoreModal';
+import type { ConfigMapType } from './ConfigmapModal';
+import type { StoreType } from './StoreModal';
 import type { QueryType } from '@/types';
 import type { AppEditType } from '@/types/app';
 import { customAlphabet } from 'nanoid';
 import { CpuSlideMarkList, MemorySlideMarkList } from '@/constants/editApp';
+import dynamic from 'next/dynamic';
+
+const ConfigmapModal = dynamic(() => import('./ConfigmapModal'));
+const StoreModal = dynamic(() => import('./StoreModal'));
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 12);
 import styles from './index.module.scss';
 
-const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
+const Form = ({
+  formHook,
+  already,
+  defaultStoreList
+}: {
+  formHook: UseFormReturn<AppEditType, any>;
+  already: boolean;
+  defaultStoreList: string[];
+}) => {
   if (!formHook) return null;
   const { name } = useRouter().query as QueryType;
   const theme = useTheme();
@@ -434,8 +446,8 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                       <Flex alignItems={'center'}>
                         <Box flex={'0 0 80px'}>出口域名</Box>
                         <Box userSelect={'all'}>
-                          {getValues('accessExternal.outDomain')}
-                          .cloud.sealos.io
+                          {getValues('accessExternal.outDomain')}.
+                          {process.env.NEXT_PUBLIC_SEALOS_DOMAIN}
                         </Box>
                       </Flex>
                     </FormControl>
@@ -454,8 +466,8 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
                         <InfoOutlineIcon mr={1} />
                         请将您的自定义域名 cname 到{' '}
                         <Box as={'strong'} userSelect={'all'}>
-                          {getValues('accessExternal.outDomain')}
-                          .cloud.sealos.io
+                          {getValues('accessExternal.outDomain')}.
+                          {process.env.NEXT_PUBLIC_SEALOS_DOMAIN}
                         </Box>
                       </Box>
                     )}
@@ -467,181 +479,187 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
             <Divider my={7} borderColor={theme.colors.divider[100]} />
           </Box>
 
-          <Accordion allowToggle index={navList[3].isSetting ? 0 : undefined}>
-            <AccordionItem border={'none'}>
-              <AccordionButton
-                display={'flex'}
-                alignItems={'center'}
-                justifyContent={'space-between'}
-                mb={3}
-                pl={2}
-              >
-                <Box className={styles.formTitle} m={0}>
-                  高级配置（选填）
-                </Box>
-                <AccordionIcon w={'1.5em'} h={'1.5em'} />
-              </AccordionButton>
-
-              <AccordionPanel w={'400px'}>
-                <FormControl mb={5}>
-                  <Box mb={4}>运行命令</Box>
-                  <Input placeholder='如：["/bin/bash", "-c"]' {...register('runCMD')} />
-                </FormControl>
-                <FormControl mb={5}>
-                  <Box mb={4}>命令参数</Box>
-                  <Input placeholder='如：["HOSTNAME", "PORT"] ' {...register('cmdParam')} />
-                </FormControl>
-
-                <>
-                  <Box className={styles.formSecondTitle} mt={10}>
-                    环境变量
+          {already && (
+            <Accordion allowToggle defaultIndex={navList[3].isSetting ? 0 : undefined}>
+              <AccordionItem border={'none'}>
+                <AccordionButton
+                  display={'flex'}
+                  alignItems={'center'}
+                  justifyContent={'space-between'}
+                  mb={3}
+                  pl={2}
+                >
+                  <Box className={styles.formTitle} m={0}>
+                    高级配置（选填）
                   </Box>
-                  {envs.map((env, index) => (
-                    <Flex key={env.id} alignItems={'center'} _notLast={{ mb: 3 }}>
-                      <Input
-                        placeholder="key"
-                        {...register(`envs.${index}.key`, {
-                          required: '环境变量不能为空'
-                        })}
-                      ></Input>
-                      <Input
-                        mx={'20px'}
-                        placeholder="value"
-                        {...register(`envs.${index}.value`, {
-                          required: '环境变量不能为空'
-                        })}
-                      ></Input>
-                      <Box
-                        className={styles.deleteIcon}
-                        cursor={'pointer'}
-                        onClick={() => removeEnvs(index)}
-                      >
-                        <MyIcon name="delete" width={'20px'} height={'20px'} />
-                      </Box>
-                    </Flex>
-                  ))}
-                  <Button
-                    mt={3}
-                    w={'calc(100% - 40px)'}
-                    variant={'outline'}
-                    onClick={() => appendEnvs({ key: '', value: '' })}
-                  >
-                    <MyIcon name="plus" />
-                    <Box ml={1}>新增环境变量</Box>
-                  </Button>
-                </>
-                <>
-                  <Box className={styles.formSecondTitle} mt={10}>
-                    Configmap 配置文件
-                  </Box>
-                  {configMaps.map((item, index) => (
-                    <Flex key={item.id} _notLast={{ mb: 5 }} alignItems={'center'}>
-                      <Flex
-                        alignItems={'center'}
-                        px={4}
-                        py={1}
-                        border={theme.borders.base}
-                        flex={'0 0 350px'}
-                        w={0}
-                        borderRadius={'sm'}
-                        cursor={'pointer'}
-                        onClick={() => setConfigEdit(item)}
-                      >
-                        <MyIcon name={'configMap'} />
-                        <Box ml={4} flex={'1 0 0'} w={0}>
-                          <Box color={'blackAlpha.900'} fontWeight={'bold'}>
-                            {item.mountPath}
-                          </Box>
-                          <Box
-                            className={styles.textEllipsis}
-                            color={'blackAlpha.500'}
-                            fontSize={'sm'}
-                          >
-                            {item.value}
-                          </Box>
+                  <AccordionIcon w={'1.5em'} h={'1.5em'} />
+                </AccordionButton>
+
+                <AccordionPanel w={'400px'}>
+                  <FormControl mb={5}>
+                    <Box mb={4}>运行命令</Box>
+                    <Input placeholder='如：["/bin/bash", "-c"]' {...register('runCMD')} />
+                  </FormControl>
+                  <FormControl mb={5}>
+                    <Box mb={4}>命令参数</Box>
+                    <Input placeholder='如：["HOSTNAME", "PORT"] ' {...register('cmdParam')} />
+                  </FormControl>
+
+                  <>
+                    <Box className={styles.formSecondTitle} mt={10}>
+                      环境变量
+                    </Box>
+                    {envs.map((env, index) => (
+                      <Flex key={env.id} alignItems={'center'} _notLast={{ mb: 3 }}>
+                        <Input
+                          placeholder="key"
+                          {...register(`envs.${index}.key`, {
+                            required: '环境变量不能为空'
+                          })}
+                        ></Input>
+                        <Input
+                          mx={'20px'}
+                          placeholder="value"
+                          {...register(`envs.${index}.value`, {
+                            required: '环境变量不能为空'
+                          })}
+                        ></Input>
+                        <Box
+                          className={styles.deleteIcon}
+                          cursor={'pointer'}
+                          onClick={() => removeEnvs(index)}
+                        >
+                          <MyIcon name="delete" width={'20px'} height={'20px'} />
                         </Box>
                       </Flex>
-                      <Box
-                        className={styles.deleteIcon}
-                        ml={3}
-                        cursor={'pointer'}
-                        onClick={() => removeConfigMaps(index)}
-                      >
-                        <MyIcon name="delete" width={'20px'} height={'20px'} />
-                      </Box>
-                    </Flex>
-                  ))}
-
-                  <Button
-                    mt={3}
-                    onClick={() => setConfigEdit({ mountPath: '', value: '' })}
-                    variant={'outline'}
-                    w={350}
-                  >
-                    <MyIcon name="plus" />
-                    <Box ml={1}>新增 configmap</Box>
-                  </Button>
-                </>
-                <>
-                  <Box className={styles.formSecondTitle} mt={10}>
-                    本地存储
-                  </Box>
-                  {storeList.map((item, index) => (
-                    <Flex key={item.id} _notLast={{ mb: 5 }} alignItems={'center'}>
-                      <Flex
-                        alignItems={'center'}
-                        px={4}
-                        py={1}
-                        border={theme.borders.base}
-                        flex={'0 0 350px'}
-                        w={0}
-                        borderRadius={'sm'}
-                        cursor={'pointer'}
-                        onClick={() => setStoreEdit(item)}
-                      >
-                        <MyIcon name={'store'} />
-                        <Box ml={4} flex={'1 0 0'} w={0}>
-                          <Box color={'blackAlpha.900'} fontWeight={'bold'}>
-                            {item.path}
+                    ))}
+                    <Button
+                      mt={3}
+                      w={'calc(100% - 40px)'}
+                      variant={'outline'}
+                      onClick={() => appendEnvs({ key: '', value: '' })}
+                    >
+                      <MyIcon name="plus" />
+                      <Box ml={1}>新增环境变量</Box>
+                    </Button>
+                  </>
+                  <>
+                    <Box className={styles.formSecondTitle} mt={10}>
+                      Configmap 配置文件
+                    </Box>
+                    {configMaps.map((item, index) => (
+                      <Flex key={item.id} _notLast={{ mb: 5 }} alignItems={'center'}>
+                        <Flex
+                          alignItems={'center'}
+                          px={4}
+                          py={1}
+                          border={theme.borders.base}
+                          flex={'0 0 350px'}
+                          w={0}
+                          borderRadius={'sm'}
+                          cursor={'pointer'}
+                          onClick={() => setConfigEdit(item)}
+                        >
+                          <MyIcon name={'configMap'} />
+                          <Box ml={4} flex={'1 0 0'} w={0}>
+                            <Box color={'blackAlpha.900'} fontWeight={'bold'}>
+                              {item.mountPath}
+                            </Box>
+                            <Box
+                              className={styles.textEllipsis}
+                              color={'blackAlpha.500'}
+                              fontSize={'sm'}
+                            >
+                              {item.value}
+                            </Box>
                           </Box>
-                          <Box
-                            className={styles.textEllipsis}
-                            color={'blackAlpha.500'}
-                            fontSize={'sm'}
-                          >
-                            {item.value} Gi
-                          </Box>
+                        </Flex>
+                        <Box
+                          className={styles.deleteIcon}
+                          ml={3}
+                          cursor={'pointer'}
+                          onClick={() => removeConfigMaps(index)}
+                        >
+                          <MyIcon name="delete" width={'20px'} height={'20px'} />
                         </Box>
                       </Flex>
-                      <Box
-                        className={styles.deleteIcon}
-                        ml={3}
-                        cursor={'pointer'}
-                        onClick={() => removeStoreList(index)}
-                      >
-                        <MyIcon name="delete" />
-                      </Box>
-                    </Flex>
-                  ))}
+                    ))}
 
-                  <Button
-                    mt={3}
-                    onClick={() => setStoreEdit({ path: '', value: 1 })}
-                    variant={'outline'}
-                    w={350}
-                  >
-                    <MyIcon name="plus" />
-                    <Box ml={1}>新增存储卷</Box>
-                  </Button>
-                </>
-              </AccordionPanel>
-            </AccordionItem>
-          </Accordion>
+                    <Button
+                      mt={3}
+                      onClick={() => setConfigEdit({ mountPath: '', value: '' })}
+                      variant={'outline'}
+                      w={350}
+                    >
+                      <MyIcon name="plus" />
+                      <Box ml={1}>新增 configmap</Box>
+                    </Button>
+                  </>
+                  <>
+                    <Box className={styles.formSecondTitle} mt={10}>
+                      本地存储
+                    </Box>
+                    {storeList.map((item, index) => (
+                      <Flex key={item.id} _notLast={{ mb: 5 }} alignItems={'center'}>
+                        <Flex
+                          alignItems={'center'}
+                          px={4}
+                          py={1}
+                          border={theme.borders.base}
+                          flex={'0 0 350px'}
+                          w={0}
+                          borderRadius={'sm'}
+                          cursor={defaultStoreList.includes(item.path) ? 'default' : 'pointer'}
+                          title={defaultStoreList.includes(item.path) ? '无法修改已配置的存储' : ''}
+                          onClick={() =>
+                            !defaultStoreList.includes(item.path) && setStoreEdit(item)
+                          }
+                        >
+                          <MyIcon name={'store'} />
+                          <Box ml={4} flex={'1 0 0'} w={0}>
+                            <Box color={'blackAlpha.900'} fontWeight={'bold'}>
+                              {item.path}
+                            </Box>
+                            <Box
+                              className={styles.textEllipsis}
+                              color={'blackAlpha.500'}
+                              fontSize={'sm'}
+                            >
+                              {item.value} Gi
+                            </Box>
+                          </Box>
+                        </Flex>
+                        <Box
+                          className={styles.deleteIcon}
+                          ml={3}
+                          cursor={'pointer'}
+                          onClick={() => removeStoreList(index)}
+                        >
+                          <MyIcon name="delete" />
+                        </Box>
+                      </Flex>
+                    ))}
+
+                    <Button
+                      mt={3}
+                      onClick={() => setStoreEdit({ path: '', value: 1 })}
+                      variant={'outline'}
+                      w={350}
+                    >
+                      <MyIcon name="plus" />
+                      <Box ml={1}>新增存储卷</Box>
+                    </Button>
+                  </>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
+          )}
         </Box>
       </Grid>
       {configEdit && (
         <ConfigmapModal
           defaultValue={configEdit}
+          listNames={configMaps.map((item) => item.mountPath.toLocaleLowerCase())}
           successCb={(e) => {
             if (!e.id) {
               appendConfigMaps(e);
@@ -662,6 +680,7 @@ const Form = ({ formHook }: { formHook: UseFormReturn<AppEditType, any> }) => {
       {storeEdit && (
         <StoreModal
           defaultValue={storeEdit}
+          listNames={storeList.map((item) => item.path.toLocaleLowerCase())}
           successCb={(e) => {
             if (!e.id) {
               appendStoreList(e);

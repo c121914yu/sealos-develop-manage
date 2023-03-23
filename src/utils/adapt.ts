@@ -129,10 +129,16 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
           backendProtocol: deployKindsMap.Ingress.metadata?.annotations?.[
             'nginx.ingress.kubernetes.io/backend-protocol'
           ] as AppEditType['accessExternal']['backendProtocol'],
-          outDomain: domain?.endsWith('cloud.sealos.io')
-            ? domain?.split('.')[0] || nanoid()
-            : nanoid(),
-          selfDomain: domain?.endsWith('cloud.sealos.io') ? '' : domain || ''
+          outDomain:
+            process.env.NEXT_PUBLIC_SEALOS_DOMAIN &&
+            domain?.endsWith(process.env.NEXT_PUBLIC_SEALOS_DOMAIN)
+              ? domain?.split('.')[0] || nanoid()
+              : nanoid(),
+          selfDomain:
+            process.env.NEXT_PUBLIC_SEALOS_DOMAIN &&
+            domain?.endsWith(process.env.NEXT_PUBLIC_SEALOS_DOMAIN)
+              ? ''
+              : domain || ''
         }
       : defaultEditVal.accessExternal,
     containerOutPort:

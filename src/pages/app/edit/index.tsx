@@ -33,11 +33,13 @@ const EditApp = ({ appName }: { appName?: string }) => {
   const { Loading, setIsLoading } = useLoading();
   const router = useRouter();
   const [forceUpdate, setForceUpdate] = useState(false);
-  const [showType, setShowType] = useState<EditType>('form');
+  const [tabType, setTabType] = useState<EditType>('form');
   const { setAppDetail } = useAppStore();
   const { title, applyBtnText, applyMessage, applySuccess, applyError } = editModeMap(!!appName);
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [already, setAlready] = useState(false);
+  const [defaultStoreList, setDefaultStoreList] = useState<string[]>([]); // default store will no be edit
   const { openConfirm, ConfirmChild } = useConfirm({
     content: applyMessage
   });
@@ -158,6 +160,7 @@ const EditApp = ({ appName }: { appName?: string }) => {
     ['init'],
     () => {
       if (!appName) {
+        setAlready(true);
         setYamlList([
           {
             filename: 'service.yaml',
@@ -175,7 +178,10 @@ const EditApp = ({ appName }: { appName?: string }) => {
     },
     {
       onSuccess(res) {
-        res && formHook.reset(adaptEditAppData(res));
+        if (!res) return;
+        setAlready(true);
+        setDefaultStoreList(res.storeList.map((item) => item.path));
+        formHook.reset(adaptEditAppData(res));
       },
       onError(err) {
         toast({
@@ -204,12 +210,12 @@ const EditApp = ({ appName }: { appName?: string }) => {
           yamlList={yamlList}
           applyBtnText={applyBtnText}
           applyCb={() => formHook.handleSubmit(openConfirm(submitSuccess), submitError)()}
-          activeType={showType}
-          setActiveType={setShowType}
+          activeType={tabType}
+          setActiveType={setTabType}
         />
         <Box flex={'1 0 0'} h={0} maxWidth={'1050px'} w={'100%'} py={4}>
-          {showType === 'form' ? (
-            <Form formHook={formHook} />
+          {tabType === 'form' ? (
+            <Form formHook={formHook} already={already} defaultStoreList={defaultStoreList} />
           ) : (
             <Yaml yamlList={yamlList} setValues={formHook.setValue} />
           )}

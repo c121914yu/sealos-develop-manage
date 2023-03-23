@@ -9,9 +9,12 @@ import {
   ModalCloseButton,
   Box,
   Select,
-  Flex
+  Flex,
+  Button
 } from '@chakra-ui/react';
 import { useLoading } from '@/hooks/useLoading';
+import { downLoadBold } from '@/utils/tools';
+import styles from '../index.module.scss';
 
 const LogsModal = ({
   podName,
@@ -29,16 +32,20 @@ const LogsModal = ({
 
   const { isLoading } = useQuery([podName], () => getPodLogs(podName), {
     onSuccess(res) {
-      setLogs(res);
+      setLogs(res + `\n${process.env.NEXT_PUBLIC_MOCK_USER}`);
     }
   });
 
   return (
-    <Modal isOpen={true} onClose={closeFn} size={'sm'}>
+    <Modal isOpen={true} onClose={closeFn} isCentered={true}>
       <ModalOverlay />
-      <ModalContent minH={'200px'} overflowY={'auto'} top={'10vh'} maxW={'90vw'}>
-        <Flex p={4}>
+      <ModalContent className={styles.logs} minH={'50vh'} overflowY={'auto'} maxW={'90vw'}>
+        <Flex p={4} alignItems={'center'}>
+          <Box fontSize={'xl'} fontWeight={'bold'}>
+            Pod 日志
+          </Box>
           <Select
+            mx={4}
             value={podName}
             maxW={'200px'}
             onChange={(e) => {
@@ -51,17 +58,15 @@ const LogsModal = ({
               </option>
             ))}
           </Select>
-          <Box ml={2}>日志</Box>
+          <Button size={'sm'} onClick={() => logs && downLoadBold(logs, 'text/plain', 'log.txt')}>
+            导出
+          </Button>
         </Flex>
         <ModalCloseButton />
-        <ModalBody
-          position={'relative'}
-          maxH={'50vh'}
-          overflow={'auto'}
-          whiteSpace={'pre-line'}
-          wordBreak={'break-all'}
-        >
-          <Box>{logs}</Box>
+        <ModalBody w={'100%'} position={'relative'} maxH={'80vh'} overflowY={'auto'} p={0}>
+          <Box as={'p'} p={4} w={'100%'} whiteSpace={'pre'}>
+            {logs}
+          </Box>
           <Loading loading={isLoading} fixed={false} />
         </ModalBody>
       </ModalContent>

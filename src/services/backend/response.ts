@@ -20,8 +20,8 @@ export const jsonRes = (
     } else if (error?.code && error.code in ERROR_TEXT) {
       msg = ERROR_TEXT[error.code];
     }
-    console.error(error);
-    console.error(msg);
+    console.log('error:', error);
+    console.log('error message:', msg);
   }
   res.json({
     code,

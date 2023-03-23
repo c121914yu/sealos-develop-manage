@@ -1,0 +1,17 @@
+.logs {
+  ::-webkit-scrollbar {
+    width: 15px;
+    height: 15px;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-track {
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #bfbfbf;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
+}

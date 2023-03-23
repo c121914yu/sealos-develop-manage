@@ -159,7 +159,7 @@ export const json2Service = (data: AppEditType) => {
 export const json2Ingress = (data: AppEditType) => {
   const host = data.accessExternal.selfDomain
     ? data.accessExternal.selfDomain
-    : `${data.accessExternal.outDomain}.cloud.sealos.io`;
+    : `${data.accessExternal.outDomain}.${process.env.NEXT_PUBLIC_SEALOS_DOMAIN}`;
   const secretName = data.accessExternal.selfDomain
     ? data.appName
     : 'wildcard-cloud-sealos-io-cert';

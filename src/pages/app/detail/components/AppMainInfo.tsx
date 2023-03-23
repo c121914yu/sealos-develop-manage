@@ -66,7 +66,8 @@ const AppMainInfo = ({ app }: { app: AppDetailType }) => {
             {
               label: '外网地址',
               value: app.accessExternal.use
-                ? app.accessExternal.selfDomain || `${app.accessExternal.outDomain}.cloud.sealos.io`
+                ? app.accessExternal.selfDomain ||
+                  `${app.accessExternal.outDomain}.${process.env.NEXT_PUBLIC_SEALOS_DOMAIN}`
                 : '未开启'
             }
           ].map((item) => (

@@ -9,11 +9,13 @@ import {
   ModalCloseButton,
   Button,
   FormControl,
+  FormErrorMessage,
   Box,
   Textarea,
   Input
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
+import MyFormControl from '@/components/FormControl';
 
 export type ConfigMapType = {
   id?: string;
@@ -26,10 +28,12 @@ const ConfigmapModal = ({
     mountPath: '',
     value: ''
   },
+  listNames,
   successCb,
   closeCb
 }: {
   defaultValue?: ConfigMapType;
+  listNames: string[];
   successCb: (e: ConfigMapType) => void;
   closeCb: () => void;
 }) => {
@@ -49,7 +53,7 @@ const ConfigmapModal = ({
       title: '修改ConfigMap'
     }
   };
-
+  console.log(listNames);
   return (
     <>
       <Modal isOpen onClose={closeCb}>
@@ -58,16 +62,26 @@ const ConfigmapModal = ({
           <ModalHeader>{textMap[type].title}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl mb={5} isInvalid={!!errors.mountPath}>
+            <MyFormControl showError errorText={errors.mountPath?.message}>
               <Box mb={1}>文件名</Box>
               <Input
                 placeholder="文件名，如 /etc/kubernetes/admin.conf "
                 {...register('mountPath', {
-                  required: '文件名不能为空'
+                  required: '文件名不能为空',
+                  pattern: {
+                    value: /^[0-9a-zA-Z/][0-9a-zA-Z/.-]*[0-9a-zA-Z/]$/,
+                    message: `文件名需满足: [a-z0-9]([-a-z0-9]*[a-z0-9])?`
+                  },
+                  validate: (e) => {
+                    if (listNames.includes(e.toLocaleLowerCase())) {
+                      return '与其他 configMap 路径冲突';
+                    }
+                    return true;
+                  }
                 })}
               />
-            </FormControl>
-            <FormControl mb={5} isInvalid={!!errors.value}>
+            </MyFormControl>
+            <FormControl isInvalid={!!errors.value}>
               <Box mb={1}>文件值</Box>
               <Textarea
                 rows={5}
