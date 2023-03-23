@@ -5,6 +5,7 @@ import PodLineChart from '@/components/PodLineChart';
 import { useCopyData } from '@/utils/tools';
 import dayjs from 'dayjs';
 import { getUserNamespace } from '@/utils/user';
+import { getSealosDomain } from '@/utils/env';
 
 const AppMainInfo = ({ app }: { app: AppDetailType }) => {
   if (!app) return null;
@@ -67,7 +68,7 @@ const AppMainInfo = ({ app }: { app: AppDetailType }) => {
               label: '外网地址',
               value: app.accessExternal.use
                 ? app.accessExternal.selfDomain ||
-                  `${app.accessExternal.outDomain}.${process.env.NEXT_PUBLIC_SEALOS_DOMAIN}`
+                  `${app.accessExternal.outDomain}.${getSealosDomain()}`
                 : '未开启'
             }
           ].map((item) => (

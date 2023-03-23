@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import type { AppEditType } from '@/types/app';
 import { strToBase64, str2Num, pathFormat, pathToNameFormat } from '@/utils/tools';
+import { getSealosDomain } from '@/utils/env';
 
 export const json2Development = (data: AppEditType) => {
   const template = {
@@ -159,7 +160,7 @@ export const json2Service = (data: AppEditType) => {
 export const json2Ingress = (data: AppEditType) => {
   const host = data.accessExternal.selfDomain
     ? data.accessExternal.selfDomain
-    : `${data.accessExternal.outDomain}.${process.env.NEXT_PUBLIC_SEALOS_DOMAIN}`;
+    : `${data.accessExternal.outDomain}.${getSealosDomain()}`;
   const secretName = data.accessExternal.selfDomain
     ? data.appName
     : 'wildcard-cloud-sealos-io-cert';

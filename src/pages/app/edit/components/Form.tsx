@@ -30,6 +30,8 @@ import type { QueryType } from '@/types';
 import type { AppEditType } from '@/types/app';
 import { customAlphabet } from 'nanoid';
 import { CpuSlideMarkList, MemorySlideMarkList } from '@/constants/editApp';
+import { getSealosDomain } from '@/utils/env';
+
 import dynamic from 'next/dynamic';
 
 const ConfigmapModal = dynamic(() => import('./ConfigmapModal'));
@@ -446,8 +448,7 @@ const Form = ({
                       <Flex alignItems={'center'}>
                         <Box flex={'0 0 80px'}>出口域名</Box>
                         <Box userSelect={'all'}>
-                          {getValues('accessExternal.outDomain')}.
-                          {process.env.NEXT_PUBLIC_SEALOS_DOMAIN}
+                          {getValues('accessExternal.outDomain')}.{getSealosDomain()}
                         </Box>
                       </Flex>
                     </FormControl>
@@ -466,8 +467,7 @@ const Form = ({
                         <InfoOutlineIcon mr={1} />
                         请将您的自定义域名 cname 到{' '}
                         <Box as={'strong'} userSelect={'all'}>
-                          {getValues('accessExternal.outDomain')}.
-                          {process.env.NEXT_PUBLIC_SEALOS_DOMAIN}
+                          {getValues('accessExternal.outDomain')}.{getSealosDomain()}
                         </Box>
                       </Box>
                     )}
