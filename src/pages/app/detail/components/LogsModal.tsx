@@ -32,7 +32,7 @@ const LogsModal = ({
 
   const { isLoading } = useQuery([podName], () => getPodLogs(podName), {
     onSuccess(res) {
-      setLogs(res + `\n${process.env.NEXT_PUBLIC_MOCK_USER}`);
+      setLogs(res);
     }
   });
 

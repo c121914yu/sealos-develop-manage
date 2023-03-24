@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import type { AppEditType } from '@/types/app';
 import { strToBase64, str2Num, pathFormat, pathToNameFormat } from '@/utils/tools';
-import { getSealosDomain } from '@/utils/env';
+import { SEALOS_DOMAIN } from '@/store/static';
 
 export const json2Development = (data: AppEditType) => {
   const template = {
@@ -160,10 +160,28 @@ export const json2Service = (data: AppEditType) => {
 export const json2Ingress = (data: AppEditType) => {
   const host = data.accessExternal.selfDomain
     ? data.accessExternal.selfDomain
-    : `${data.accessExternal.outDomain}.${getSealosDomain()}`;
+    : `${data.accessExternal.outDomain}.${SEALOS_DOMAIN}`;
   const secretName = data.accessExternal.selfDomain
     ? data.appName
     : 'wildcard-cloud-sealos-io-cert';
+
+  // different protocol annotations
+  const map = {
+    HTTP: {
+      'nginx.ingress.kubernetes.io/ssl-redirect': 'false',
+      'nginx.ingress.kubernetes.io/backend-protocol': 'HTTP',
+      'nginx.ingress.kubernetes.io/rewrite-target': '/$2'
+    },
+    GRPC: {
+      'nginx.ingress.kubernetes.io/ssl-redirect': 'false',
+      'nginx.ingress.kubernetes.io/backend-protocol': 'GRPC',
+      'nginx.ingress.kubernetes.io/rewrite-target': '/$2'
+    },
+    WS: {
+      'nginx.ingress.kubernetes.io/proxy-read-timeout': 3600,
+      'nginx.ingress.kubernetes.io/proxy-send-timeout': 3600
+    }
+  };
 
   const ingress = {
     apiVersion: 'networking.k8s.io/v1',
@@ -175,9 +193,7 @@ export const json2Ingress = (data: AppEditType) => {
       },
       annotations: {
         'kubernetes.io/ingress.class': 'nginx',
-        'nginx.ingress.kubernetes.io/ssl-redirect': 'false',
-        'nginx.ingress.kubernetes.io/backend-protocol': data.accessExternal.backendProtocol,
-        'nginx.ingress.kubernetes.io/rewrite-target': '/$2'
+        ...map[data.accessExternal.backendProtocol]
       }
     },
     spec: {

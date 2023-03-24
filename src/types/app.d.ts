@@ -52,7 +52,7 @@ export interface AppEditType {
   containerOutPort: number | '';
   accessExternal: {
     use: boolean;
-    backendProtocol: 'HTTP' | 'GRPC';
+    backendProtocol: 'HTTP' | 'GRPC' | 'WS';
     outDomain: string;
     selfDomain: string;
   };

@@ -17,7 +17,7 @@ import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
 import { defaultEditVal } from '@/constants/editApp';
 import { customAlphabet } from 'nanoid';
-import { getSealosDomain } from '@/utils/env';
+import { SEALOS_DOMAIN } from '@/store/static';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', 12);
 
@@ -101,8 +101,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
   }
 
   const domain = deployKindsMap?.Ingress?.spec?.rules?.[0].host;
-  const sealosDomain = getSealosDomain();
-  console.log(sealosDomain, domain);
+
   return {
     id: deployKindsMap.Deployment.metadata?.uid || ``,
     appName: deployKindsMap.Deployment.metadata?.name || '无法获取APP Name',
@@ -132,10 +131,10 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
             'nginx.ingress.kubernetes.io/backend-protocol'
           ] as AppEditType['accessExternal']['backendProtocol'],
           outDomain:
-            sealosDomain && domain?.endsWith(sealosDomain)
+            SEALOS_DOMAIN && domain?.endsWith(SEALOS_DOMAIN)
               ? domain?.split('.')[0] || nanoid()
               : nanoid(),
-          selfDomain: sealosDomain && domain?.endsWith(sealosDomain) ? '' : domain || ''
+          selfDomain: SEALOS_DOMAIN && domain?.endsWith(SEALOS_DOMAIN) ? '' : domain || ''
         }
       : defaultEditVal.accessExternal,
     containerOutPort:

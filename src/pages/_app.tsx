@@ -10,6 +10,7 @@ import { sealosApp, createSealosApp } from 'sealos-desktop-sdk/app';
 import { useConfirm } from '@/hooks/useConfirm';
 import throttle from 'lodash/throttle';
 import { useGlobalStore } from '@/store/global';
+import { getServiceEnv } from '@/store/static';
 import 'nprogress/nprogress.css';
 import '@/styles/reset.scss';
 
@@ -35,7 +36,9 @@ export default function App({ Component, pageProps }: AppProps) {
     title: '跳转提示',
     content: '该应用不允许单独使用，点击确认前往 Sealos Desktop 使用。'
   });
+
   useEffect(() => {
+    getServiceEnv();
     NProgress.start();
     const response = createSealosApp();
 

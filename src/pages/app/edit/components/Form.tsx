@@ -30,7 +30,7 @@ import type { QueryType } from '@/types';
 import type { AppEditType } from '@/types/app';
 import { customAlphabet } from 'nanoid';
 import { CpuSlideMarkList, MemorySlideMarkList } from '@/constants/editApp';
-import { getSealosDomain } from '@/utils/env';
+import { SEALOS_DOMAIN } from '@/store/static';
 
 import dynamic from 'next/dynamic';
 
@@ -441,6 +441,7 @@ const Form = ({
                         <Select flex={1} {...register('accessExternal.backendProtocol')}>
                           <option value="HTTP">https</option>
                           <option value="GRPC">grpcs</option>
+                          <option value="WS">websocket</option>
                         </Select>
                       </Flex>
                     </FormControl>
@@ -448,7 +449,7 @@ const Form = ({
                       <Flex alignItems={'center'}>
                         <Box flex={'0 0 80px'}>出口域名</Box>
                         <Box userSelect={'all'}>
-                          {getValues('accessExternal.outDomain')}.{getSealosDomain()}
+                          {getValues('accessExternal.outDomain')}.{SEALOS_DOMAIN}
                         </Box>
                       </Flex>
                     </FormControl>
@@ -467,7 +468,7 @@ const Form = ({
                         <InfoOutlineIcon mr={1} />
                         请将您的自定义域名 cname 到{' '}
                         <Box as={'strong'} userSelect={'all'}>
-                          {getValues('accessExternal.outDomain')}.{getSealosDomain()}
+                          {getValues('accessExternal.outDomain')}.{SEALOS_DOMAIN}
                         </Box>
                       </Box>
                     )}
