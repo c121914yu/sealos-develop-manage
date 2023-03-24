@@ -29,22 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       `app=${name}`
     );
 
-    // pods.forEach((pod) => {
-    //   pod.spec?.volumes?.forEach(async (item) => {
-    //     if (!item.persistentVolumeClaim) return;
-    //     const claimName = item?.persistentVolumeClaim?.claimName;
-    //     const claim = await k8sCore.readNamespacedPersistentVolumeClaim(claimName, namespace);
-    //     const pvName = claim.body?.spec?.volumeName;
-    //     if (!pvName) return;
-    //     // const pv = await k8sCore.readPersistentVolume(pvName);
-    //     // const pvStatus = pv.body.status;
-    //     console.log(claimName, pvName);
-    //   });
-    // });
-    // k8sCore.readNamespacedPersistentVolumeClaim('test-test', namespace).then((res) => {
-    //   console.log(res.body.status);
-    // });
-
     jsonRes(res, {
       data: pods
     });

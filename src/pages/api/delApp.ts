@@ -11,32 +11,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       throw new Error('deploy name is empty');
     }
 
-    const { k8sApp, k8sCore, k8sAutoscaling, k8sNetworkingApp, namespace } = await getK8s({
-      kubeconfig: await authSession(req.headers)
-    });
-
-    // list PersistentVolumeClaim
-    const persistentVolumeClaimList = await k8sCore
-      .listNamespacedPersistentVolumeClaim(
-        namespace,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        `app=${name}`
-      )
-      .then((res) => res.body.items.map((item) => item.metadata?.name).filter((item) => item));
+    const { k8sApp, k8sCore, k8sAutoscaling, k8sNetworkingApp, namespace, k8sCustomObjects } =
+      await getK8s({
+        kubeconfig: await authSession(req.headers)
+      });
 
     /* delete all sources */
     const response = await Promise.allSettled([
       k8sApp.deleteNamespacedDeployment(name, namespace), // delete deploy
+      k8sApp.deleteNamespacedStatefulSet(name, namespace), // delete deploy
       k8sCore.deleteNamespacedService(name, namespace), // delete service
       k8sCore.deleteNamespacedConfigMap(name, namespace), // delete configMap
       k8sCore.deleteNamespacedSecret(name, namespace), // delete secret
-      ...persistentVolumeClaimList.map((item) =>
-        k8sCore.deleteNamespacedPersistentVolumeClaim(item as string, namespace)
-      ),
       k8sNetworkingApp.deleteNamespacedIngress(name, namespace), // delete Ingress
+      k8sCustomObjects.deleteNamespacedCustomObject(
+        // delete Issuer
+        'cert-manager.io',
+        'v1',
+        namespace,
+        'issuers',
+        name
+      ),
+      k8sCustomObjects.deleteNamespacedCustomObject(
+        // delete Certificate
+        'cert-manager.io',
+        'v1',
+        namespace,
+        'certificates',
+        name
+      ),
       k8sAutoscaling.deleteNamespacedHorizontalPodAutoscaler(name, namespace) // delete HorizontalPodAutoscaler
     ]);
 

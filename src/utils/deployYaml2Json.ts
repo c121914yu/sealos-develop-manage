@@ -10,13 +10,13 @@ export const json2Development = (data: AppEditType) => {
     metadata: {
       name: data.appName,
       annotations: {
-        originImageName: data.imageName
+        originImageName: data.imageName,
+        minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
+        maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
         'cloud.sealos.io/appname': data.appName,
-        app: data.appName,
-        minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
-        maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
+        app: data.appName
       }
     },
     spec: {
@@ -97,10 +97,6 @@ export const json2Development = (data: AppEditType) => {
                   name: pathToNameFormat(item.mountPath),
                   mountPath: item.mountPath,
                   subPath: pathFormat(item.mountPath)
-                })),
-                ...data.storeList.map((item) => ({
-                  mountPath: item.path,
-                  name: pathToNameFormat(item.path)
                 }))
               ]
             }
@@ -117,16 +113,160 @@ export const json2Development = (data: AppEditType) => {
                   }
                 ]
               }
-            })),
-            ...data.storeList.map((item) => ({
-              name: pathToNameFormat(item.path),
-              persistentVolumeClaim: {
-                claimName: `${data.appName}-${pathToNameFormat(item.path)}`
-              }
             }))
           ]
         }
       }
+    }
+  };
+
+  return yaml.dump(template);
+};
+
+export const json2StatefulSet = (data: AppEditType) => {
+  const template = {
+    apiVersion: 'apps/v1',
+    kind: 'StatefulSet',
+    metadata: {
+      name: data.appName,
+      annotations: {
+        originImageName: data.imageName,
+        minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
+        maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
+        // pv: JSON.stringify(
+        //   data.storeList.map((item) => ({
+        //     path: item.path,
+        //     value: `${item.value}`
+        //   }))
+        // )
+      },
+      labels: {
+        'cloud.sealos.io/appname': data.appName,
+        app: data.appName
+      }
+    },
+    spec: {
+      replicas: str2Num(data.replicas),
+      revisionHistoryLimit: 1,
+      minReadySeconds: 10,
+      serviceName: data.appName,
+      selector: {
+        matchLabels: {
+          app: data.appName
+        }
+      },
+      strategy: {
+        type: 'RollingUpdate',
+        rollingUpdate: {
+          maxUnavailable: 1,
+          maxSurge: 0
+        }
+      },
+      template: {
+        metadata: {
+          labels: {
+            app: data.appName
+          }
+        },
+        spec: {
+          terminationGracePeriodSeconds: 10,
+          imagePullSecrets: data.secret.use
+            ? [
+                // 私有仓库秘钥
+                {
+                  name: data.appName
+                }
+              ]
+            : undefined,
+          containers: [
+            {
+              name: data.appName,
+              image: `${data.secret.use ? `${data.secret.serverAddress}/` : ''}${data.imageName}`,
+              env:
+                data.envs.length > 0
+                  ? data.envs.map((env) => ({
+                      name: env.key,
+                      value: env.value
+                    }))
+                  : [],
+              resources: {
+                requests: {
+                  cpu: `${str2Num(Math.floor(data.cpu / 2))}m`,
+                  // cpu: '5m',
+                  memory: `${str2Num(Math.floor(data.memory / 2))}Mi`
+                },
+                limits: {
+                  cpu: `${str2Num(data.cpu)}m`,
+                  // cpu: '30m',
+                  memory: `${str2Num(data.memory)}Mi`
+                }
+              },
+              command: (() => {
+                try {
+                  return JSON.parse(data.runCMD);
+                } catch (error) {
+                  return [];
+                }
+              })(),
+              args: (() => {
+                try {
+                  return JSON.parse(data.cmdParam);
+                } catch (error) {
+                  return [];
+                }
+              })(),
+              ports: [
+                {
+                  containerPort: str2Num(data.containerOutPort)
+                }
+              ],
+              imagePullPolicy: 'Always',
+              volumeMounts: [
+                ...data.configMapList.map((item) => ({
+                  name: pathToNameFormat(item.mountPath),
+                  mountPath: item.mountPath,
+                  subPath: pathFormat(item.mountPath)
+                })),
+                ...data.storeList.map((item) => ({
+                  name: pathToNameFormat(item.path),
+                  mountPath: item.path
+                }))
+              ]
+            }
+          ],
+          volumes: [
+            ...data.configMapList.map((item) => ({
+              name: pathToNameFormat(item.mountPath), // name === [development.***.volumeMounts[*].name]
+              configMap: {
+                name: data.appName, // name === configMap.yaml.meta.name
+                items: [
+                  {
+                    key: pathToNameFormat(item.mountPath),
+                    path: pathFormat(item.mountPath) // path ===[development.***.volumeMounts[*].subPath]
+                  }
+                ]
+              }
+            }))
+          ]
+        }
+      },
+      volumeClaimTemplates: data.storeList.map((store) => ({
+        metadata: {
+          annotations: {
+            path: store.path,
+            value: `${store.value}`
+          },
+          name: pathToNameFormat(store.path)
+        },
+        spec: {
+          accessModes: ['ReadWriteOnce'],
+          resources: {
+            requests: {
+              storage: `${store.value}Gi`
+            }
+          }
+        }
+      }))
     }
   };
 
@@ -370,32 +510,4 @@ export const json2HPA = (data: AppEditType) => {
     }
   };
   return yaml.dump(template);
-};
-
-export const json2Pv = (data: AppEditType) => {
-  const template = data.storeList.map((item) =>
-    yaml.dump({
-      apiVersion: 'v1',
-      kind: 'PersistentVolumeClaim',
-      metadata: {
-        annotations: {
-          path: item.path,
-          value: `${item.value}`
-        },
-        labels: {
-          app: data.appName
-        },
-        name: `${data.appName}-${pathToNameFormat(item.path)}`
-      },
-      spec: {
-        accessModes: ['ReadWriteOnce'],
-        resources: {
-          requests: {
-            storage: `${item.value}Gi`
-          }
-        }
-      }
-    })
-  );
-  return template.join('\n---\n');
 };

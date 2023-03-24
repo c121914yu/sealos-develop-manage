@@ -1,4 +1,5 @@
 import type {
+  V1StatefulSet,
   V1Deployment,
   V1ConfigMap,
   V1Service,
@@ -6,7 +7,6 @@ import type {
   V1Secret,
   V1HorizontalPodAutoscaler,
   V1Pod,
-  V1PersistentVolumeClaimList,
   SinglePodMetrics
 } from '@kubernetes/client-node';
 import dayjs from 'dayjs';
@@ -37,8 +37,8 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
     usedCpu: new Array(30).fill(0),
     useMemory: new Array(30).fill(0),
     activeReplicas: app.status?.readyReplicas || 0,
-    maxReplicas: +(app.metadata?.labels?.maxReplicas || app.status?.readyReplicas || 0),
-    minReplicas: +(app.metadata?.labels?.minReplicas || app.status?.readyReplicas || 0)
+    maxReplicas: +(app.metadata?.annotations?.maxReplicas || app.status?.readyReplicas || 0),
+    minReplicas: +(app.metadata?.annotations?.minReplicas || app.status?.readyReplicas || 0)
   };
 };
 
@@ -68,9 +68,10 @@ export const adaptMetrics = (metrics: SinglePodMetrics): PodMetrics => {
 };
 
 export enum YamlKindEnum {
+  StatefulSet = 'StatefulSet',
+  Deployment = 'Deployment',
   Service = 'Service',
   ConfigMap = 'ConfigMap',
-  Deployment = 'Deployment',
   Ingress = 'Ingress',
   Issuer = 'Issuer',
   Certificate = 'Certificate',
@@ -81,13 +82,13 @@ export enum YamlKindEnum {
 
 export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
   const deployKindsMap: {
+    [YamlKindEnum.StatefulSet]?: V1StatefulSet;
     [YamlKindEnum.Deployment]?: V1Deployment;
     [YamlKindEnum.Service]?: V1Service;
     [YamlKindEnum.ConfigMap]?: V1ConfigMap;
     [YamlKindEnum.Ingress]?: V1Ingress;
     [YamlKindEnum.HorizontalPodAutoscaler]?: V1HorizontalPodAutoscaler;
     [YamlKindEnum.Secret]?: V1Secret;
-    [YamlKindEnum.PersistentVolumeClaim]?: { items: V1PersistentVolumeClaimList[] };
   } = {};
   configs.forEach((item) => {
     if (item.kind) {
@@ -96,34 +97,41 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     }
   });
 
-  if (!deployKindsMap.Deployment) {
+  const appDeploy = deployKindsMap.Deployment || deployKindsMap.StatefulSet;
+
+  if (!appDeploy) {
     throw new Error('获取APP异常');
   }
 
   const domain = deployKindsMap?.Ingress?.spec?.rules?.[0].host;
 
   return {
-    id: deployKindsMap.Deployment.metadata?.uid || ``,
-    appName: deployKindsMap.Deployment.metadata?.name || '无法获取APP Name',
-    createTime: dayjs(deployKindsMap.Deployment.metadata?.creationTimestamp).format(
-      'YYYY-MM-DD hh:mm'
-    ),
+    id: appDeploy.metadata?.uid || ``,
+    appName: appDeploy.metadata?.name || 'app Name',
+    createTime: dayjs(appDeploy.metadata?.creationTimestamp).format('YYYY-MM-DD hh:mm'),
     status: appStatusMap.running,
-    imageName: deployKindsMap.Deployment?.metadata?.annotations?.originImageName || '',
-    runCMD:
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.command?.join(' ') || '',
-    cmdParam:
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.args?.join(' ') || '',
-    replicas: deployKindsMap.Deployment.spec?.replicas || 0,
+    imageName:
+      appDeploy?.metadata?.annotations?.originImageName ||
+      appDeploy.spec?.template?.spec?.containers?.[0]?.image ||
+      '',
+    runCMD: appDeploy.spec?.template?.spec?.containers?.[0]?.command?.join(' ') || '',
+    cmdParam: appDeploy.spec?.template?.spec?.containers?.[0]?.args?.join(' ') || '',
+    replicas: appDeploy.spec?.replicas || 0,
     cpu: cpuFormatToM(
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.resources?.limits?.cpu || '0'
+      appDeploy.spec?.template?.spec?.containers?.[0]?.resources?.limits?.cpu || '0'
     ),
     memory: memoryFormatToMi(
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.resources?.limits?.memory ||
-        '0'
+      appDeploy.spec?.template?.spec?.containers?.[0]?.resources?.limits?.memory || '0'
     ),
     usedCpu: new Array(30).fill(0),
     usedMemory: new Array(30).fill(0),
+    containerOutPort:
+      appDeploy.spec?.template?.spec?.containers?.[0]?.ports?.[0]?.containerPort || 0,
+    envs:
+      appDeploy.spec?.template?.spec?.containers?.[0]?.env?.map((env) => ({
+        key: env.name,
+        value: env.value || ''
+      })) || [],
     accessExternal: deployKindsMap.Ingress
       ? {
           use: true,
@@ -137,14 +145,6 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
           selfDomain: SEALOS_DOMAIN && domain?.endsWith(SEALOS_DOMAIN) ? '' : domain || ''
         }
       : defaultEditVal.accessExternal,
-    containerOutPort:
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.ports?.[0]?.containerPort ||
-      0,
-    envs:
-      deployKindsMap.Deployment.spec?.template?.spec?.containers?.[0]?.env?.map((env) => ({
-        key: env.name,
-        value: env.value || ''
-      })) || [],
     hpa: deployKindsMap.HorizontalPodAutoscaler?.spec
       ? {
           use: true,
@@ -157,7 +157,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     configMapList: deployKindsMap.ConfigMap?.data
       ? Object.entries(deployKindsMap.ConfigMap.data).map(([key, value], i) => ({
           mountPath:
-            deployKindsMap.Deployment?.spec?.template.spec?.containers[0].volumeMounts?.find(
+            appDeploy?.spec?.template.spec?.containers[0].volumeMounts?.find(
               (item) => item.name === key
             )?.mountPath || key,
           value
@@ -167,12 +167,10 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
       ...defaultEditVal.secret,
       use: !!deployKindsMap.Secret?.data
     },
-    storeList: deployKindsMap.PersistentVolumeClaim
-      ? deployKindsMap.PersistentVolumeClaim.items.map((item) => ({
-          // @ts-ignore
+    storeList: deployKindsMap.StatefulSet?.spec?.volumeClaimTemplates
+      ? deployKindsMap.StatefulSet?.spec?.volumeClaimTemplates.map((item) => ({
           path: item.metadata?.annotations?.path || '',
-          // @ts-ignore
-          value: +item.metadata?.annotations?.value
+          value: Number(item.metadata?.annotations?.value || 0)
         }))
       : []
   };

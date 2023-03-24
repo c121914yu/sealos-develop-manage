@@ -4,12 +4,12 @@ import { Flex, Box } from '@chakra-ui/react';
 import type { YamlItemType } from '@/types';
 import {
   json2Development,
+  json2StatefulSet,
   json2Service,
   json2Ingress,
   json2ConfigMap,
   json2Secret,
-  json2HPA,
-  json2Pv
+  json2HPA
 } from '@/utils/deployYaml2Json';
 import { useForm } from 'react-hook-form';
 import { defaultEditVal, editModeMap } from '@/constants/editApp';
@@ -52,17 +52,22 @@ const EditApp = ({ appName }: { appName?: string }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const formOnchangeDebounce = useCallback(
     debounce((data: AppEditType) => {
-      console.log(data);
+      console.log('update data');
       try {
         setYamlList([
           {
             filename: 'service.yaml',
             value: json2Service(data)
           },
-          {
-            filename: 'deployment.yaml',
-            value: json2Development(data)
-          },
+          data.storeList.length > 0
+            ? {
+                filename: 'statefulSet.yaml',
+                value: json2StatefulSet(data)
+              }
+            : {
+                filename: 'deployment.yaml',
+                value: json2Development(data)
+              },
           ...(data.configMapList.length > 0
             ? [
                 {
@@ -92,14 +97,6 @@ const EditApp = ({ appName }: { appName?: string }) => {
                 {
                   filename: 'secret.yaml',
                   value: json2Secret(data)
-                }
-              ]
-            : []),
-          ...(data.storeList.length > 0
-            ? [
-                {
-                  filename: 'pv.yaml',
-                  value: json2Pv(data)
                 }
               ]
             : [])

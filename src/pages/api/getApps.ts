@@ -6,14 +6,22 @@ import { jsonRes } from '@/services/backend/response';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<ApiResp>) {
   try {
-    const { k8sApp, k8sAutoscaling, namespace } = await getK8s({
+    const { k8sApp, namespace } = await getK8s({
       kubeconfig: await authSession(req.headers)
     });
 
-    const response = await k8sApp.listNamespacedDeployment(namespace);
-    const data = response.body?.items.filter(
-      (item) => !!item.metadata?.labels ?? ['cloud.sealos.io/appname']
-    );
+    const response = await Promise.allSettled([
+      k8sApp.listNamespacedDeployment(namespace),
+      k8sApp.listNamespacedStatefulSet(namespace)
+    ]);
+
+    const apps = response
+      .filter((item) => item.status === 'fulfilled')
+      .map((item: any) => item?.value?.body?.items)
+      .filter((item) => item)
+      .flat();
+
+    const data = apps.filter((item) => !!item.metadata?.labels ?? ['cloud.sealos.io/appname']);
 
     jsonRes(res, { data });
   } catch (err: any) {

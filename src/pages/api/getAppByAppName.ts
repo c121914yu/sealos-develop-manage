@@ -17,26 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     const response = await Promise.allSettled([
       k8sApp.readNamespacedDeployment(appName, namespace),
+      k8sApp.readNamespacedStatefulSet(appName, namespace),
       k8sCore.readNamespacedService(appName, namespace),
       k8sCore.readNamespacedConfigMap(appName, namespace),
       k8sNetworkingApp.readNamespacedIngress(appName, namespace),
       k8sCore.readNamespacedSecret(appName, namespace),
-      k8sAutoscaling.readNamespacedHorizontalPodAutoscaler(appName, namespace),
-      k8sCore
-        .listNamespacedPersistentVolumeClaim(
-          namespace,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          `app=${appName}`
-        )
-        .then((res) => ({
-          body: {
-            kind: 'PersistentVolumeClaim',
-            items: res.body.items.filter((item) => !item.metadata?.deletionTimestamp)
-          }
-        }))
+      k8sAutoscaling.readNamespacedHorizontalPodAutoscaler(appName, namespace)
     ]);
 
     // Check for errors other than 404

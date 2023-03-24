@@ -1,16 +1,19 @@
 import { AppStatusEnum, PodStatusEnum } from '@/constants/app';
-import type { V1Pod, SinglePodMetrics } from '@kubernetes/client-node';
 import type {
   V1Deployment,
   V1ConfigMap,
   V1Service,
   V1Ingress,
   V1Secret,
-  V1HorizontalPodAutoscaler
+  V1HorizontalPodAutoscaler,
+  V1Pod,
+  SinglePodMetrics,
+  V1StatefulSet
 } from '@kubernetes/client-node';
 
 export type DeployKindsType =
   | V1Deployment
+  | V1StatefulSet
   | V1ConfigMap
   | V1Service
   | V1Ingress
