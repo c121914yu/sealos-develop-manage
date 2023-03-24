@@ -7,11 +7,18 @@ import type {
   V1Secret,
   V1HorizontalPodAutoscaler,
   V1Pod,
-  SinglePodMetrics
+  SinglePodMetrics,
+  CoreV1EventList
 } from '@kubernetes/client-node';
 import dayjs from 'dayjs';
 import yaml from 'js-yaml';
-import type { AppListItemType, PodDetailType, AppDetailType, PodMetrics } from '@/types/app';
+import type {
+  AppListItemType,
+  PodDetailType,
+  AppDetailType,
+  PodMetrics,
+  PodEvent
+} from '@/types/app';
 import { appStatusMap, podStatusMap } from '@/constants/app';
 import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
@@ -45,6 +52,7 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
 export const adaptPod = (pod: V1Pod): PodDetailType => {
   // console.log(pod);
   return {
+    ...pod,
     podName: pod.metadata?.name || 'pod name',
     // @ts-ignore
     status: podStatusMap[pod.status?.phase] || podStatusMap.Failed,
@@ -65,6 +73,22 @@ export const adaptMetrics = (metrics: SinglePodMetrics): PodMetrics => {
     cpu: cpuFormatToM(metrics?.containers?.[0]?.usage?.cpu),
     memory: memoryFormatToMi(metrics?.containers?.[0]?.usage?.memory)
   };
+};
+
+export const adaptEvents = (events: CoreV1EventList): PodEvent[] => {
+  console.log(events);
+  return events.items
+    .sort((a, b) => {
+      if (!a.lastTimestamp || !b.lastTimestamp) return 1;
+      return new Date(b.lastTimestamp).getTime() - new Date(a.lastTimestamp).getTime();
+    })
+    .map((item) => ({
+      id: item.metadata.uid || `${Date.now()}`,
+      reason: item.reason || '',
+      message: item.message || '',
+      count: item.count || 0,
+      type: item.type || 'Warning'
+    }));
 };
 
 export enum YamlKindEnum {

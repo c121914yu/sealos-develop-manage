@@ -18,18 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     // get pods
-    const { body: data } = await k8sCore.readNamespacedPodLog(
-      podName,
+    const { body: data } = await k8sCore.listNamespacedEvent(
       namespace,
       undefined,
       undefined,
       undefined,
-      undefined,
-      undefined,
-      false,
-      undefined,
-      50,
-      false
+      `involvedObject.name=${podName}`
     );
 
     jsonRes(res, {

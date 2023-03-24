@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -7,12 +7,15 @@ import {
   ModalCloseButton,
   Box,
   Select,
-  Flex
+  Flex,
+  Grid
 } from '@chakra-ui/react';
-import type { PodDetailType } from '@/types/app';
+import type { PodDetailType, PodEvent } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
-import { printMemory } from '@/utils/tools';
 import { MOCK_PODS } from '@/mock/apps';
+import { Tooltip } from '@chakra-ui/react';
+import { getPodEvents } from '@/api/app';
+import { useQuery } from '@tanstack/react-query';
 
 const Logs = ({
   pod = MOCK_PODS[0],
@@ -25,29 +28,58 @@ const Logs = ({
   setPodDetail: (name: string) => void;
   closeFn: () => void;
 }) => {
-  const RenderItem = ({
-    label,
-    children
-  }: {
-    label: string;
-    children: string | number | JSX.Element;
-  }) => {
+  const [events, setEvents] = useState<PodEvent[]>([]);
+  const RenderItem = ({ label, children }: { label: string; children: React.ReactNode }) => {
     return (
-      <Flex my={5} alignItems="center">
+      <Flex w={'100%'} my={5} alignItems="center">
         <Box flex={'0 0 100px'} w={0}>
           {label}
         </Box>
-        <Box color={'blackAlpha.600'} userSelect={'all'}>
+        <Box flex={'1 0 0'} w={0} color={'blackAlpha.600'} userSelect={'all'}>
           {children}
         </Box>
       </Flex>
     );
   };
+  const RenderTag = ({ children }: { children: string }) => {
+    return (
+      <Tooltip label={children}>
+        <Box
+          py={1}
+          px={4}
+          backgroundColor={'gray.100'}
+          whiteSpace={'nowrap'}
+          overflow={'hidden'}
+          textOverflow={'ellipsis'}
+          color={'blackAlpha.800'}
+          cursor={'default'}
+        >
+          {children}
+        </Box>
+      </Tooltip>
+    );
+  };
+
+  useQuery(['init'], () => getPodEvents(pod.podName), {
+    onSuccess(res) {
+      console.log(res);
+      setEvents(res);
+    }
+  });
 
   return (
     <Modal isOpen={true} onClose={closeFn} size={'sm'}>
       <ModalOverlay />
-      <ModalContent h={'90vh'} m={0} top={'5vh'} maxW={'70vw'}>
+      <ModalContent
+        h={'90vh'}
+        m={0}
+        top={'5vh'}
+        maxW={'70vw'}
+        display={'flex'}
+        flexDirection={'column'}
+        overflowY={'auto'}
+      >
+        <ModalCloseButton />
         <Flex p={4} alignItems={'center'}>
           <Box mr={3} fontSize={'xl'} fontWeight={'bold'}>
             Pod 详情
@@ -67,45 +99,96 @@ const Logs = ({
             ))}
           </Select>
         </Flex>
-        <ModalCloseButton />
-        <ModalBody
-          position={'relative'}
-          overflow={'auto'}
-          whiteSpace={'pre-line'}
-          wordBreak={'break-all'}
-        >
-          <>
-            <Box mb={1}>
+        <Grid gridTemplateColumns={'1fr 1fr'} gridGap={2} py={2} px={5}>
+          <Box>
+            <Box mb={3} textAlign={'center'}>
               CPU: ({((pod.usedCpu[pod.usedCpu.length - 1] / pod.cpu) * 100).toFixed(2)}%)
             </Box>
-            <Box h={'50px'} w={'100%'}>
+            <Box h={'60px'} w={'100%'}>
               <PodLineChart type="cpu" cpu={pod.cpu} data={pod.usedCpu} />
             </Box>
-          </>
-
-          <>
-            <Box mt={5} mb={1}>
+          </Box>
+          <Box>
+            <Box mb={3} textAlign={'center'}>
               Memory: ({((pod.usedMemory[pod.usedMemory.length - 1] / pod.memory) * 100).toFixed(2)}
               %)
             </Box>
-            <Box h={'50px'} w={'100%'}>
+            <Box h={'60px'} w={'100%'}>
               <PodLineChart type="memory" data={pod.usedMemory} />
             </Box>
-          </>
-
-          <RenderItem label="状态">
-            <Box as="span" color={pod.status.color}>
-              {pod.status.label}
+          </Box>
+        </Grid>
+        <Grid py={5} flex={'1 0 0'} h={0} px={5} gridTemplateColumns={'400px 1fr'} gridGap={4}>
+          <Box>
+            <Box mb={4} color={'blackAlpha.600'}>
+              详情
             </Box>
-          </RenderItem>
-
-          <RenderItem label="Restarts">{pod.restarts}</RenderItem>
-          <RenderItem label="Age">{pod.age}</RenderItem>
-          <RenderItem label="Pod Name">{pod.podName}</RenderItem>
-          <RenderItem label="Limit Cpu">{`${pod.cpu / 1000} Core`}</RenderItem>
-          <RenderItem label="Limit Primary">{printMemory(pod.memory)}</RenderItem>
-          <RenderItem label="Pod IP">{pod.ip}</RenderItem>
-        </ModalBody>
+            <Box backgroundColor={'#FBFBFD'} p={4}>
+              <RenderItem label="状态">
+                <Box as="span" color={pod.status.color}>
+                  {pod.status.label}
+                </Box>
+              </RenderItem>
+              <RenderItem label="Restarts">{pod.restarts}</RenderItem>
+              <RenderItem label="Age">{pod.age}</RenderItem>
+              <RenderItem label="Pod Name">{pod.podName}</RenderItem>
+              <RenderItem label="Controlled By">{`${pod.metadata?.ownerReferences?.[0].kind}/${pod.metadata?.ownerReferences?.[0].name}`}</RenderItem>
+              <RenderItem label="Labels">
+                <Grid gridTemplateColumns={'auto auto'} gridGap={2}>
+                  {Object.entries(pod.metadata?.labels || {}).map(
+                    ([key, value]: [string, string]) => (
+                      <RenderTag key={key}>{`${key}=${value}`}</RenderTag>
+                    )
+                  )}
+                </Grid>
+              </RenderItem>
+              <RenderItem label="Annotations">
+                {Object.entries(pod.metadata?.annotations || {}).map(
+                  ([key, value]: [string, string]) => (
+                    <Box key={key} mb={2}>
+                      <RenderTag>{`${key}=${value}`}</RenderTag>
+                    </Box>
+                  )
+                )}
+              </RenderItem>
+            </Box>
+          </Box>
+          <Flex flexDirection={'column'} h={'100%'}>
+            <Box mb={4} color={'blackAlpha.600'}>
+              Events
+            </Box>
+            <Box flex={'1 0 0'} h={0} overflowY={'auto'}>
+              {events.map((event, i) => (
+                <Box
+                  key={event.id}
+                  pl={6}
+                  pb={4}
+                  ml={4}
+                  borderLeft={`2px solid ${i === events.length - 1 ? 'transparent' : '#DCE7F1'}`}
+                  position={'relative'}
+                  _before={{
+                    content: '""',
+                    position: 'absolute',
+                    left: '-7px',
+                    w: '12px',
+                    h: '12px',
+                    borderRadius: '12px',
+                    backgroundColor: '#fff',
+                    border: '2px solid',
+                    borderColor: event.type === 'Warning' ? '#F65959' : '#08D5E2'
+                  }}
+                >
+                  <Flex lineHeight={1} mb={2}>
+                    <Box fontWeight={'bold'}>{event.reason}</Box>
+                  </Flex>
+                  <Box color={'blackAlpha.600'} fontSize={'xs'}>
+                    {event.message}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Flex>
+        </Grid>
       </ModalContent>
     </Modal>
   );

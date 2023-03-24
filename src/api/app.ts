@@ -1,6 +1,18 @@
 import { GET, POST, DELETE } from '@/services/request';
-import type { V1Deployment, V1Pod, SinglePodMetrics } from '@kubernetes/client-node';
-import { adaptAppListItem, adaptPod, adaptAppDetail, adaptMetrics } from '@/utils/adapt';
+import type {
+  V1Deployment,
+  V1Pod,
+  SinglePodMetrics,
+  CoreV1Event,
+  CoreV1EventList
+} from '@kubernetes/client-node';
+import {
+  adaptAppListItem,
+  adaptPod,
+  adaptAppDetail,
+  adaptMetrics,
+  adaptEvents
+} from '@/utils/adapt';
 
 export const postDeployApp = (yamlList: string[]) => POST('/api/deployApp', { yamlList });
 
@@ -24,6 +36,9 @@ export const getPodsMetrics = (podsName: string[]) =>
   );
 
 export const getPodLogs = (podName: string) => GET(`/api/getPodLogs?podName=${podName}`);
+
+export const getPodEvents = (podName: string) =>
+  GET(`/api/getPodEvents?podName=${podName}`).then(adaptEvents);
 
 export const restartAppByName = (appName: string) => GET(`/api/restartApp?appName=${appName}`);
 

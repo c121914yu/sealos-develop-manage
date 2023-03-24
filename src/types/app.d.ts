@@ -101,7 +101,7 @@ export interface PodStatusMapType {
   value: `${PodStatusEnum}`;
   color: string;
 }
-export interface PodDetailType {
+export interface PodDetailType extends V1Pod {
   podName: string;
   status: PodStatusMapType;
   nodeName: string;
@@ -117,4 +117,12 @@ export interface PodMetrics {
   podName: string;
   cpu: number;
   memory: number;
+}
+
+export interface PodEvent {
+  id: string;
+  reason: string;
+  message: string;
+  count: number;
+  type: string | 'Normal' | 'Warning';
 }
