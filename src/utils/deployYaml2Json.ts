@@ -133,12 +133,6 @@ export const json2StatefulSet = (data: AppEditType) => {
         originImageName: data.imageName,
         minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
         maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
-        // pv: JSON.stringify(
-        //   data.storeList.map((item) => ({
-        //     path: item.path,
-        //     value: `${item.value}`
-        //   }))
-        // )
       },
       labels: {
         'cloud.sealos.io/appname': data.appName,

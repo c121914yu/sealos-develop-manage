@@ -59,7 +59,7 @@ export const adaptPod = (pod: V1Pod): PodDetailType => {
     nodeName: pod.spec?.nodeName || 'node name',
     ip: pod.status?.podIP || 'pod ip',
     restarts: pod.status?.containerStatuses ? pod.status?.containerStatuses[0].restartCount : 0,
-    age: formatPodTime(pod.metadata?.creationTimestamp || new Date()),
+    age: formatPodTime(pod.metadata?.creationTimestamp),
     usedCpu: new Array(30).fill(0),
     usedMemory: new Array(30).fill(0),
     cpu: cpuFormatToM(pod.spec?.containers?.[0]?.resources?.limits?.cpu || '0'),
@@ -87,7 +87,9 @@ export const adaptEvents = (events: CoreV1EventList): PodEvent[] => {
       reason: item.reason || '',
       message: item.message || '',
       count: item.count || 0,
-      type: item.type || 'Warning'
+      type: item.type || 'Warning',
+      firstTime: formatPodTime(item.firstTimestamp),
+      lastTime: formatPodTime(item.lastTimestamp)
     }));
 };
 

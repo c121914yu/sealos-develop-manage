@@ -125,4 +125,6 @@ export interface PodEvent {
   message: string;
   count: number;
   type: string | 'Normal' | 'Warning';
+  firstTime: string;
+  lastTime: string;
 }

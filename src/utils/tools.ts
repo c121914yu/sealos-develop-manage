@@ -142,7 +142,7 @@ export const printMemory = (val: number) => {
 /**
  * format pod createTime
  */
-export const formatPodTime = (createTimeStamp: Date) => {
+export const formatPodTime = (createTimeStamp: Date = new Date()) => {
   const podStartTimeStamp = dayjs(createTimeStamp);
 
   let timeDiff = Math.floor(dayjs().diff(podStartTimeStamp) / 1000);

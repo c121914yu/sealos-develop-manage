@@ -40,6 +40,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         'certificates',
         name
       ),
+      k8sCore.deleteCollectionNamespacedPersistentVolumeClaim(
+        namespace,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        `app=${name}`
+      ),
       k8sAutoscaling.deleteNamespacedHorizontalPodAutoscaler(name, namespace) // delete HorizontalPodAutoscaler
     ]);
 

@@ -610,11 +610,8 @@ const Form = ({
                           flex={'0 0 350px'}
                           w={0}
                           borderRadius={'sm'}
-                          cursor={defaultStoreList.includes(item.path) ? 'default' : 'pointer'}
-                          title={defaultStoreList.includes(item.path) ? '无法修改已配置的存储' : ''}
-                          onClick={() =>
-                            !defaultStoreList.includes(item.path) && setStoreEdit(item)
-                          }
+                          cursor={'pointer'}
+                          onClick={() => setStoreEdit(item)}
                         >
                           <MyIcon name={'store'} />
                           <Box ml={4} flex={'1 0 0'} w={0}>
@@ -660,7 +657,9 @@ const Form = ({
       {configEdit && (
         <ConfigmapModal
           defaultValue={configEdit}
-          listNames={configMaps.map((item) => item.mountPath.toLocaleLowerCase())}
+          listNames={configMaps
+            .filter((item) => item.id !== configEdit.id)
+            .map((item) => item.mountPath.toLocaleLowerCase())}
           successCb={(e) => {
             if (!e.id) {
               appendConfigMaps(e);
@@ -681,7 +680,9 @@ const Form = ({
       {storeEdit && (
         <StoreModal
           defaultValue={storeEdit}
-          listNames={storeList.map((item) => item.path.toLocaleLowerCase())}
+          listNames={storeList
+            .filter((item) => item.id !== storeEdit.id)
+            .map((item) => item.path.toLocaleLowerCase())}
           successCb={(e) => {
             if (!e.id) {
               appendStoreList(e);

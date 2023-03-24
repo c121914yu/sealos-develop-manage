@@ -36,10 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         delApi: () => k8sApp.deleteNamespacedDeployment(appName, namespace)
       },
       {
-        kind: YamlKindEnum.StatefulSet,
-        delApi: () => k8sApp.deleteCollectionNamespacedStatefulSet(appName, namespace)
-      },
-      {
         kind: YamlKindEnum.ConfigMap,
         delApi: () => k8sCore.deleteNamespacedConfigMap(appName, namespace)
       },
@@ -86,6 +82,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const delArr = deleteArr.filter(
       (item) => !jsonYaml.find((yaml: any) => yaml.kind === item.kind)
     );
+
+    // focus delete StatefulSet
+    try {
+      await k8sApp.deleteNamespacedStatefulSet(appName, namespace);
+      console.log('delete StatefulSet');
+    } catch (error: any) {
+      if (+error?.statusCode !== 404) {
+        console.log('delete StatefulSet fail');
+      }
+    }
+
+    // delete other source
     (await Promise.allSettled(delArr.map((item) => item.delApi()))).forEach((item, i) => {
       if (item.status === 'fulfilled') {
         console.log(`delete ${delArr[i].kind}`);

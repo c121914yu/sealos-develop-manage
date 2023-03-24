@@ -39,7 +39,7 @@ const LogsModal = ({
   return (
     <Modal isOpen={true} onClose={closeFn} isCentered={true}>
       <ModalOverlay />
-      <ModalContent className={styles.logs} minH={'50vh'} overflowY={'auto'} maxW={'90vw'}>
+      <ModalContent className={styles.logs} overflowY={'auto'} maxW={'90vw'} h={'90vh'} m={0}>
         <Flex p={4} alignItems={'center'}>
           <Box fontSize={'xl'} fontWeight={'bold'}>
             Pod 日志

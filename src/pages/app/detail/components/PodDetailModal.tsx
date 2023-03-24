@@ -16,6 +16,7 @@ import { MOCK_PODS } from '@/mock/apps';
 import { Tooltip } from '@chakra-ui/react';
 import { getPodEvents } from '@/api/app';
 import { useQuery } from '@tanstack/react-query';
+import { useLoading } from '@/hooks/useLoading';
 
 const Logs = ({
   pod = MOCK_PODS[0],
@@ -28,6 +29,7 @@ const Logs = ({
   setPodDetail: (name: string) => void;
   closeFn: () => void;
 }) => {
+  const { Loading } = useLoading();
   const [events, setEvents] = useState<PodEvent[]>([]);
   const RenderItem = ({ label, children }: { label: string; children: React.ReactNode }) => {
     return (
@@ -60,7 +62,7 @@ const Logs = ({
     );
   };
 
-  useQuery(['init'], () => getPodEvents(pod.podName), {
+  const { isLoading } = useQuery(['init'], () => getPodEvents(pod.podName), {
     onSuccess(res) {
       console.log(res);
       setEvents(res);
@@ -68,13 +70,12 @@ const Logs = ({
   });
 
   return (
-    <Modal isOpen={true} onClose={closeFn} size={'sm'}>
+    <Modal isOpen={true} onClose={closeFn} size={'sm'} isCentered>
       <ModalOverlay />
       <ModalContent
         h={'90vh'}
+        maxW={'90vw'}
         m={0}
-        top={'5vh'}
-        maxW={'70vw'}
         display={'flex'}
         flexDirection={'column'}
         overflowY={'auto'}
@@ -153,7 +154,7 @@ const Logs = ({
               </RenderItem>
             </Box>
           </Box>
-          <Flex flexDirection={'column'} h={'100%'}>
+          <Flex position={'relative'} flexDirection={'column'} h={'100%'}>
             <Box mb={4} color={'blackAlpha.600'}>
               Events
             </Box>
@@ -162,7 +163,7 @@ const Logs = ({
                 <Box
                   key={event.id}
                   pl={6}
-                  pb={4}
+                  pb={6}
                   ml={4}
                   borderLeft={`2px solid ${i === events.length - 1 ? 'transparent' : '#DCE7F1'}`}
                   position={'relative'}
@@ -179,7 +180,15 @@ const Logs = ({
                   }}
                 >
                   <Flex lineHeight={1} mb={2}>
-                    <Box fontWeight={'bold'}>{event.reason}</Box>
+                    <Box fontWeight={'bold'}>
+                      {event.reason},&ensp;Last Occur: {event.lastTime}
+                    </Box>
+                    <Box ml={2} color={'blackAlpha.600'} fontSize={'xs'}>
+                      First Seen: {event.firstTime}
+                    </Box>
+                    <Box ml={2} color={'blackAlpha.600'} fontSize={'xs'}>
+                      count: {event.count}
+                    </Box>
                   </Flex>
                   <Box color={'blackAlpha.600'} fontSize={'xs'}>
                     {event.message}
@@ -187,6 +196,7 @@ const Logs = ({
                 </Box>
               ))}
             </Box>
+            <Loading loading={isLoading} fixed={false} />
           </Flex>
         </Grid>
       </ModalContent>
