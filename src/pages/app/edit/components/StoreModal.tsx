@@ -68,7 +68,7 @@ const StoreModal = ({
           <ModalBody>
             <FormControl mb={5} isInvalid={!!errors.value}>
               <Box mb={1}>容量</Box>
-              <Tooltip label={'容量范围: 1~20Gi'} hasArrow>
+              <Tooltip label={'容量范围: 1~20Gi'}>
                 <NumberInput max={20} min={1} step={1} position={'relative'}>
                   <Box
                     position={'absolute'}

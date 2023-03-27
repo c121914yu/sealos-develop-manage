@@ -15,7 +15,7 @@ export const json2Development = (data: AppEditType) => {
         maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
-        'cloud.sealos.io/appname': data.appName,
+        [`${SEALOS_DOMAIN}/appname`]: data.appName,
         app: data.appName
       }
     },
@@ -135,7 +135,7 @@ export const json2StatefulSet = (data: AppEditType) => {
         maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
-        'cloud.sealos.io/appname': data.appName,
+        [`${SEALOS_DOMAIN}/appname`]: data.appName,
         app: data.appName
       }
     },
@@ -274,7 +274,7 @@ export const json2Service = (data: AppEditType) => {
     metadata: {
       name: data.appName,
       labels: {
-        'cloud.sealos.io/appname': data.appName
+        [`${SEALOS_DOMAIN}/appname`]: data.appName
       }
     },
     spec: {
@@ -323,7 +323,7 @@ export const json2Ingress = (data: AppEditType) => {
     metadata: {
       name: data.appName,
       labels: {
-        'cloud.sealos.io/appname': data.appName
+        [`${SEALOS_DOMAIN}/appname`]: data.appName
       },
       annotations: {
         'kubernetes.io/ingress.class': 'nginx',

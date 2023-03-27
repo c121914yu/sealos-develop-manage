@@ -1,34 +1,39 @@
 import * as k8s from '@kubernetes/client-node';
 import * as yaml from 'js-yaml';
 
+export function CheckIsInCluster(): [boolean, string] {
+  if (
+    process.env.KUBERNETES_SERVICE_HOST !== undefined &&
+    process.env.KUBERNETES_SERVICE_HOST !== '' &&
+    process.env.KUBERNETES_SERVICE_PORT !== undefined &&
+    process.env.KUBERNETES_SERVICE_PORT !== ''
+  ) {
+    return [
+      true,
+      'https://' + process.env.KUBERNETES_SERVICE_HOST + ':' + process.env.KUBERNETES_SERVICE_PORT
+    ];
+  }
+  return [false, ''];
+}
+
 /* init api */
 export function K8sApi(config: string): k8s.KubeConfig {
   const kc = new k8s.KubeConfig();
   kc.loadFromString(config);
 
   const cluster = kc.getCurrentCluster();
-  if (cluster !== null) {
-    let server: k8s.Cluster;
 
+  if (cluster) {
     const [inCluster, hosts] = CheckIsInCluster();
-    if (inCluster && hosts !== '') {
-      server = {
-        name: cluster.name,
-        caData: cluster.caData,
-        caFile: cluster.caFile,
-        // server: 'https://kubernetes.default.svc.cluster.local:443',
-        server: hosts,
-        skipTLSVerify: cluster.skipTLSVerify
-      };
-    } else {
-      server = {
-        name: cluster.name,
-        caData: cluster.caData,
-        caFile: cluster.caFile,
-        server: 'https://apiserver.cluster.local:6443',
-        skipTLSVerify: cluster.skipTLSVerify
-      };
-    }
+
+    const server: k8s.Cluster = {
+      name: cluster.name,
+      caData: cluster.caData,
+      caFile: cluster.caFile,
+      server: inCluster && hosts ? hosts : 'https://apiserver.cluster.local:6443',
+      skipTLSVerify: cluster.skipTLSVerify
+    };
+
     kc.clusters.forEach((item, i) => {
       if (item.name === cluster.name) {
         kc.clusters[i] = server;
@@ -48,12 +53,11 @@ export type CRDMeta = {
 
 export async function CreateYaml(
   kc: k8s.KubeConfig,
-  spec_str: string
+  specs: k8s.KubernetesObject[]
 ): Promise<k8s.KubernetesObject[]> {
-  const created = [] as k8s.KubernetesObject[];
   const client = k8s.KubernetesObjectApi.makeApiClient(kc);
-  const specs = yaml.loadAll(spec_str) as k8s.KubernetesObject[];
   const validSpecs = specs.filter((s) => s && s.kind && s.metadata);
+  const created = [] as k8s.KubernetesObject[];
 
   try {
     for (const spec of validSpecs) {
@@ -86,10 +90,9 @@ export async function CreateYaml(
 
 export async function replaceYaml(
   kc: k8s.KubeConfig,
-  spec_str: string
+  specs: k8s.KubernetesObject[]
 ): Promise<k8s.KubernetesObject[]> {
   const client = k8s.KubernetesObjectApi.makeApiClient(kc);
-  const specs = yaml.loadAll(spec_str) as k8s.KubernetesObject[];
   const validSpecs = specs.filter((s) => s && s.kind && s.metadata);
   const succeed = [] as k8s.KubernetesObject[];
 
@@ -133,21 +136,6 @@ export async function replaceYaml(
   return succeed;
 }
 
-export function CheckIsInCluster(): [boolean, string] {
-  if (
-    process.env.KUBERNETES_SERVICE_HOST !== undefined &&
-    process.env.KUBERNETES_SERVICE_HOST !== '' &&
-    process.env.KUBERNETES_SERVICE_PORT !== undefined &&
-    process.env.KUBERNETES_SERVICE_PORT !== ''
-  ) {
-    return [
-      true,
-      'https://' + process.env.KUBERNETES_SERVICE_HOST + ':' + process.env.KUBERNETES_SERVICE_PORT
-    ];
-  }
-  return [false, ''];
-}
-
 export function GetUserDefaultNameSpace(user: string): string {
   return 'ns-' + user;
 }
@@ -165,7 +153,7 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
 
   const applyYamlList = async (yamlList: string[], type: 'create' | 'replace') => {
     // insert namespace
-    const formatYaml = yamlList
+    const formatYaml: k8s.KubernetesObject[] = yamlList
       .map((item) => yaml.loadAll(item))
       .flat()
       .map((item: any) => {
@@ -173,18 +161,14 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
           item.metadata.namespace = namespace;
         }
         return item;
-      })
-      .map((item) => yaml.dump(item));
+      });
 
-    // merge yaml lsit
-    const mergeYaml = formatYaml.join('\n---\n');
-    // return mergeYaml
     if (type === 'create') {
-      return CreateYaml(kc, mergeYaml);
+      return CreateYaml(kc, formatYaml);
     } else if (type === 'replace') {
-      return replaceYaml(kc, mergeYaml);
+      return replaceYaml(kc, formatYaml);
     }
-    return CreateYaml(kc, mergeYaml);
+    return CreateYaml(kc, formatYaml);
   };
 
   return Promise.resolve({

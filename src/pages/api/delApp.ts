@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         name
       ),
       k8sCore.deleteCollectionNamespacedPersistentVolumeClaim(
+        // delete pvc
         namespace,
         undefined,
         undefined,

@@ -14,7 +14,7 @@ import {
   adaptEvents
 } from '@/utils/adapt';
 
-export const postDeployApp = (yamlList: string[]) => POST('/api/deployApp', { yamlList });
+export const postDeployApp = (yamlList: string[]) => POST('/api/applyApp', { yamlList });
 
 export const putApp = (yamlList: string[], appName: string) =>
   POST('/api/updateApp', { yamlList, appName });

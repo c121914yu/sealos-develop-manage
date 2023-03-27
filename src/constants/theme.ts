@@ -81,6 +81,15 @@ const Input: ComponentStyleConfig = {
   }
 };
 
+const Tooltip = defineStyleConfig({
+  baseStyle: {
+    backgroundColor: 'white',
+    color: 'blackAlpha.800',
+    borderRadius: 'sm',
+    boxShadow: '1px 1px 7px rgba(0,0,0,0.2)'
+  }
+});
+
 export const theme = extendTheme({
   styles: {
     global: {
@@ -112,6 +121,7 @@ export const theme = extendTheme({
   },
   components: {
     Button,
-    Input
+    Input,
+    Tooltip
   }
 });

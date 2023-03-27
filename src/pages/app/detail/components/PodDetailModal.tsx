@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalBody,
   ModalCloseButton,
   Box,
   Select,
@@ -31,19 +30,27 @@ const Logs = ({
 }) => {
   const { Loading } = useLoading();
   const [events, setEvents] = useState<PodEvent[]>([]);
-  const RenderItem = ({ label, children }: { label: string; children: React.ReactNode }) => {
-    return (
-      <Flex w={'100%'} my={5} alignItems="center">
-        <Box flex={'0 0 100px'} w={0}>
-          {label}
-        </Box>
-        <Box flex={'1 0 0'} w={0} color={'blackAlpha.600'} userSelect={'all'}>
-          {children}
-        </Box>
-      </Flex>
-    );
-  };
-  const RenderTag = ({ children }: { children: string }) => {
+  const RenderItem = useCallback(
+    ({ label, children }: { label: string; children: React.ReactNode }) => {
+      return (
+        <Flex w={'100%'} my={5} alignItems="center">
+          <Box flex={'0 0 100px'} w={0}>
+            {label}
+          </Box>
+          <Box
+            flex={'1 0 0'}
+            w={0}
+            color={'blackAlpha.600'}
+            userSelect={typeof children === 'string' ? 'all' : 'auto'}
+          >
+            {children}
+          </Box>
+        </Flex>
+      );
+    },
+    []
+  );
+  const RenderTag = useCallback(({ children }: { children: string }) => {
     return (
       <Tooltip label={children}>
         <Box
@@ -60,7 +67,7 @@ const Logs = ({
         </Box>
       </Tooltip>
     );
-  };
+  }, []);
 
   const { isLoading } = useQuery(['init'], () => getPodEvents(pod.podName), {
     onSuccess(res) {

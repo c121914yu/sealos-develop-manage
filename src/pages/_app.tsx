@@ -10,7 +10,7 @@ import { sealosApp, createSealosApp } from 'sealos-desktop-sdk/app';
 import { useConfirm } from '@/hooks/useConfirm';
 import throttle from 'lodash/throttle';
 import { useGlobalStore } from '@/store/global';
-import { getServiceEnv } from '@/store/static';
+import { getServiceEnv, SEALOS_DOMAIN } from '@/store/static';
 import 'nprogress/nprogress.css';
 import '@/styles/reset.scss';
 
@@ -51,7 +51,7 @@ export default function App({ Component, pageProps }: AppProps) {
         console.log('App is not running in desktop');
         if (!process.env.NEXT_PUBLIC_MOCK_USER) {
           openConfirm(() => {
-            window.open('https://cloud.sealos.io', '_self');
+            window.open(`https://${SEALOS_DOMAIN}`, '_self');
           })();
         }
       }

@@ -21,7 +21,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       .filter((item) => item)
       .flat();
 
-    const data = apps.filter((item) => !!item.metadata?.labels ?? ['cloud.sealos.io/appname']);
+    const data = apps.filter(
+      (item) => !!item.metadata?.labels ?? [`${process.env.SEALOS_DOMAIN}/appname`]
+    );
 
     jsonRes(res, { data });
   } catch (err: any) {
