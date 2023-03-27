@@ -39,7 +39,7 @@ const EditApp = ({ appName }: { appName?: string }) => {
   const [yamlList, setYamlList] = useState<YamlItemType[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [already, setAlready] = useState(false);
-  const [defaultStoreList, setDefaultStoreList] = useState<string[]>([]); // default store will no be edit
+  const [defaultStorePathList, setDefaultStorePathList] = useState<string[]>([]); // default store will no be edit
   const { openConfirm, ConfirmChild } = useConfirm({
     content: applyMessage
   });
@@ -177,7 +177,7 @@ const EditApp = ({ appName }: { appName?: string }) => {
       onSuccess(res) {
         if (!res) return;
         setAlready(true);
-        setDefaultStoreList(res.storeList.map((item) => item.path));
+        setDefaultStorePathList(res.storeList.map((item) => item.path));
         formHook.reset(adaptEditAppData(res));
       },
       onError(err) {
@@ -212,7 +212,11 @@ const EditApp = ({ appName }: { appName?: string }) => {
         />
         <Box flex={'1 0 0'} h={0} maxWidth={'1050px'} w={'100%'} py={4}>
           {tabType === 'form' ? (
-            <Form formHook={formHook} already={already} defaultStoreList={defaultStoreList} />
+            <Form
+              formHook={formHook}
+              already={already}
+              defaultStorePathList={defaultStorePathList}
+            />
           ) : (
             <Yaml yamlList={yamlList} setValues={formHook.setValue} />
           )}

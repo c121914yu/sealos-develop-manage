@@ -33,15 +33,21 @@ const StoreModal = ({
     value: 1
   },
   listNames,
+  isEditStore,
   successCb,
   closeCb
 }: {
   defaultValue?: StoreType;
   listNames: string[];
+  isEditStore: boolean;
   successCb: (e: StoreType) => void;
   closeCb: () => void;
 }) => {
   const type = useMemo(() => (!!defaultValue.id ? 'create' : 'edit'), [defaultValue]);
+  const minVal = useMemo(
+    () => (isEditStore ? defaultValue.value : 1),
+    [defaultValue.value, isEditStore]
+  );
   const {
     register,
     handleSubmit,
@@ -68,8 +74,8 @@ const StoreModal = ({
           <ModalBody>
             <FormControl mb={5} isInvalid={!!errors.value}>
               <Box mb={1}>容量</Box>
-              <Tooltip label={'容量范围: 1~20Gi'}>
-                <NumberInput max={20} min={1} step={1} position={'relative'}>
+              <Tooltip label={`容量范围: ${minVal}~20 Gi`}>
+                <NumberInput max={20} min={minVal} step={1} position={'relative'}>
                   <Box
                     position={'absolute'}
                     right={10}
@@ -83,12 +89,12 @@ const StoreModal = ({
                     {...register('value', {
                       required: '容量不能为空',
                       min: {
-                        value: 0,
-                        message: '容量最为为0Gi'
+                        value: minVal,
+                        message: `容量最为为 ${minVal} Gi`
                       },
                       max: {
                         value: 20,
-                        message: '容量最大为20Gi'
+                        message: '容量最大为 20 Gi'
                       },
                       valueAsNumber: true
                     })}
@@ -105,6 +111,8 @@ const StoreModal = ({
               <Box mb={1}>挂载路径</Box>
               <Input
                 placeholder="如：/data"
+                title={isEditStore ? '不允许修改挂载路径' : ''}
+                disabled={isEditStore}
                 {...register('path', {
                   required: '挂载路径不能为空',
                   pattern: {

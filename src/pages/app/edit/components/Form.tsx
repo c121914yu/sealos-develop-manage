@@ -43,11 +43,11 @@ import styles from './index.module.scss';
 const Form = ({
   formHook,
   already,
-  defaultStoreList
+  defaultStorePathList
 }: {
   formHook: UseFormReturn<AppEditType, any>;
   already: boolean;
-  defaultStoreList: string[];
+  defaultStorePathList: string[];
 }) => {
   if (!formHook) return null;
   const { name } = useRouter().query as QueryType;
@@ -680,6 +680,7 @@ const Form = ({
       {storeEdit && (
         <StoreModal
           defaultValue={storeEdit}
+          isEditStore={defaultStorePathList.includes(storeEdit.path)}
           listNames={storeList
             .filter((item) => item.id !== storeEdit.id)
             .map((item) => item.path.toLocaleLowerCase())}
