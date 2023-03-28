@@ -297,7 +297,7 @@ export const json2Ingress = (data: AppEditType) => {
     : `${data.accessExternal.outDomain}.${SEALOS_DOMAIN}`;
   const secretName = data.accessExternal.selfDomain
     ? data.appName
-    : 'wildcard-cloud-sealos-io-cert';
+    : `wildcard-${SEALOS_DOMAIN.replace(/\./g, '-')}-cert`;
 
   // different protocol annotations
   const map = {

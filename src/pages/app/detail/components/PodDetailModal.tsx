@@ -16,6 +16,7 @@ import { Tooltip } from '@chakra-ui/react';
 import { getPodEvents } from '@/api/app';
 import { useQuery } from '@tanstack/react-query';
 import { useLoading } from '@/hooks/useLoading';
+import MyIcon from '@/components/Icon';
 
 const Logs = ({
   pod = MOCK_PODS[0],
@@ -202,6 +203,18 @@ const Logs = ({
                   </Box>
                 </Box>
               ))}
+              {events.length === 0 && !isLoading && (
+                <Box
+                  position={'absolute'}
+                  left={'50%'}
+                  top={'50%'}
+                  transform={'translate(-50%,-100%)'}
+                  textAlign={'center'}
+                >
+                  <MyIcon name={'noApp'} w={'80px'} h={'80px'}></MyIcon>
+                  <Box>暂无 Events</Box>
+                </Box>
+              )}
             </Box>
             <Loading loading={isLoading} fixed={false} />
           </Flex>

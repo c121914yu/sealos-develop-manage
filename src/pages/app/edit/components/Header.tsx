@@ -61,7 +61,7 @@ const Header = ({
         </Button>
       </Flex>
       <Flex maxWidth={'1050px'} m={'auto'} alignItems={'center'}>
-        <MyIcon name="noApp" w={'36px'} h={'36px'} />
+        <MyIcon name="sealos" w={'30px'} h={'30px'} />
         <Box fontWeight={'bold'} fontSize={'lg'} ml={4}>
           配置表单
         </Box>

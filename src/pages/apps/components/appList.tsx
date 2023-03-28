@@ -106,7 +106,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
     <Box backgroundColor={'#f9f9f9'} p={34} minH="100vh">
       <Box display={'flex'} alignItems={'flex-start'} justifyContent={'space-between'}>
         <Box display={'flex'} alignItems={'center'}>
-          <MyIcon name="noApp" w={'46px'} h={'44px'} />
+          <MyIcon mr={2} name="sealos" w={'36px'} h={'36px'} />
           <h5>
             <strong>应用列表</strong>
           </h5>

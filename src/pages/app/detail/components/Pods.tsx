@@ -33,7 +33,7 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
   const { Loading } = useLoading();
   const [restartLoading, setRestartLoading] = useState<string[]>([]);
   const { openConfirm: openConfirmRestart, ConfirmChild: RestartConfirmChild } = useConfirm({
-    content: '重启 Pod 会导致存储内容丢失，请确认！'
+    content: '请确认重启 Pod？'
   });
 
   const handleRestartPod = useCallback(

@@ -23,10 +23,6 @@ export function K8sApi(config: string): k8s.KubeConfig {
 
   const cluster = kc.getCurrentCluster();
   const jsonKubeConfig: any = yaml.load(config);
-  const localServer =
-    process.env.NODE_ENV === 'development'
-      ? jsonKubeConfig?.clusters[0]?.cluster?.server
-      : 'https://apiserver.cluster.local:6443';
 
   if (cluster) {
     const [inCluster, hosts] = CheckIsInCluster();
@@ -38,7 +34,6 @@ export function K8sApi(config: string): k8s.KubeConfig {
       server: inCluster && hosts ? hosts : 'https://apiserver.cluster.local:6443',
       skipTLSVerify: cluster.skipTLSVerify
     };
-    console.log(server);
 
     kc.clusters.forEach((item, i) => {
       if (item.name === cluster.name) {
