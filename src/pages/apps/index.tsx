@@ -1,11 +1,14 @@
+import { useEffect } from 'react';
 import Empty from './components/empty';
 import AppList from './components/appList';
 import { useQuery } from '@tanstack/react-query';
 // import Loading from '@/components/Loading';
 import { useAppStore } from '@/store/app';
 import { useLoading } from '@/hooks/useLoading';
+import { useRouter } from 'next/router';
 
 export default function Home() {
+  const router = useRouter();
   const { appList, setAppList, intervalLoadPods } = useAppStore();
   const { Loading } = useLoading();
   const { isLoading } = useQuery(['appListQuery'], setAppList);
@@ -18,6 +21,11 @@ export default function Home() {
       refetchInterval: 3000
     }
   );
+
+  useEffect(() => {
+    router.prefetch('/app/detail');
+    router.prefetch('/app/edit');
+  }, [router]);
 
   return (
     <>

@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import {
   Box,
@@ -11,15 +10,7 @@ import {
   Tr,
   Th,
   Td,
-  TableContainer,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
-  MenuDivider
+  TableContainer
 } from '@chakra-ui/react';
 import { AppListItemType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';

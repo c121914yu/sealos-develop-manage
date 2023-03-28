@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+const analyzer = process.env === 'production' ? [new BundleAnalyzerPlugin()] : [];
 
 const nextConfig = {
   output: 'standalone',
@@ -12,6 +15,7 @@ const nextConfig = {
         use: ['@svgr/webpack']
       }
     ]);
+    config.plugins = [...config.plugins, ...analyzer];
 
     return config;
   }

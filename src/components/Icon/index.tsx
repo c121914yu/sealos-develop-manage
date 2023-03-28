@@ -1,7 +1,6 @@
 import React from 'react';
 import type { IconProps } from '@chakra-ui/react';
 import { Icon } from '@chakra-ui/react';
-import dynamic from 'next/dynamic';
 
 const map = {
   more: require('./icons/more.svg').default,
