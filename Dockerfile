@@ -56,4 +56,6 @@ EXPOSE 3000
 
 ENV PORT 3000
 
+ENV SEALOS_DOMAIN ""
+
 CMD ["node", "server.js"]
