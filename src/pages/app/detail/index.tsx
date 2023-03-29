@@ -62,7 +62,7 @@ const AppDetail = ({ appName }: { appName: string }) => {
           {appDetail ? <AppBaseInfo app={appDetail} /> : <Loading loading={true} fixed={false} />}
         </Card>
         <Flex flexDirection={'column'} h={'100%'} flex={'1 0 0'} w={0}>
-          <Card mb={4} minH={'250px'}>
+          <Card mb={4} minH={'257px'}>
             {appDetail ? <AppMainInfo app={appDetail} /> : <Loading loading={true} fixed={false} />}
           </Card>
           <Card flex={'1 0 0'} h={0} overflowY={'auto'}>

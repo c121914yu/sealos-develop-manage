@@ -76,7 +76,6 @@ export const adaptMetrics = (metrics: SinglePodMetrics): PodMetrics => {
 };
 
 export const adaptEvents = (events: CoreV1EventList): PodEvent[] => {
-  console.log(events);
   return events.items
     .sort((a, b) => {
       if (!a.lastTimestamp || !b.lastTimestamp) return 1;

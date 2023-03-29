@@ -13,6 +13,14 @@ const Button = defineStyleConfig({
     }
   },
   sizes: {
+    xs: {
+      fontSize: 'xs',
+      px: 3,
+      py: 0,
+      fontWeight: 'normal',
+      height: '22px',
+      borderRadius: '2px'
+    },
     sm: {
       fontSize: 'sm',
       px: 3,

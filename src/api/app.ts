@@ -1,4 +1,5 @@
 import { GET, POST, DELETE } from '@/services/request';
+import { PodEvent } from '../types/app';
 import type {
   V1Deployment,
   V1Pod,

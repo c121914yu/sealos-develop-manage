@@ -1,13 +1,17 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalCloseButton,
+  ModalHeader,
+  ModalBody,
   Box,
   Select,
   Flex,
-  Grid
+  Grid,
+  Button,
+  useDisclosure
 } from '@chakra-ui/react';
 import type { PodDetailType, PodEvent } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
@@ -17,6 +21,10 @@ import { getPodEvents } from '@/api/app';
 import { useQuery } from '@tanstack/react-query';
 import { useLoading } from '@/hooks/useLoading';
 import MyIcon from '@/components/Icon';
+import { streamFetch } from '@/services/streamFetch';
+import { useToast } from '@/hooks/useToast';
+
+import styles from '../index.module.scss';
 
 const Logs = ({
   pod = MOCK_PODS[0],
@@ -29,8 +37,18 @@ const Logs = ({
   setPodDetail: (name: string) => void;
   closeFn: () => void;
 }) => {
+  const controller = useRef(new AbortController());
   const { Loading } = useLoading();
+  const { toast } = useToast();
   const [events, setEvents] = useState<PodEvent[]>([]);
+  const [eventAnalysesText, setEventAnalysesText] = useState('');
+  const { isOpen: isAnalyzing, onOpen: onStartAnalyses, onClose: onEndAnalyses } = useDisclosure();
+  const {
+    isOpen: isOpenAnalyses,
+    onOpen: onOpenAnalyses,
+    onClose: onCloseAnalyses
+  } = useDisclosure();
+
   const RenderItem = useCallback(
     ({ label, children }: { label: string; children: React.ReactNode }) => {
       return (
@@ -71,11 +89,56 @@ const Logs = ({
   }, []);
 
   const { isLoading } = useQuery(['init'], () => getPodEvents(pod.podName), {
+    refetchInterval: 3000,
     onSuccess(res) {
-      console.log(res);
       setEvents(res);
     }
   });
+
+  useEffect(() => {
+    controller.current = new AbortController();
+    return () => {
+      controller.current?.abort();
+    };
+  }, []);
+
+  const onCloseAnalysesModel = useCallback(() => {
+    setEventAnalysesText('');
+    onCloseAnalyses();
+    controller.current?.abort();
+    controller.current = new AbortController();
+  }, [onCloseAnalyses]);
+
+  const onclickAnalyses = useCallback(async () => {
+    try {
+      onOpenAnalyses();
+      onStartAnalyses();
+      await streamFetch({
+        url: '/api/getPodEventsAnalyses',
+        data: events.map((item) => ({
+          reason: item.reason,
+          message: item.message,
+          count: item.count,
+          type: item.type,
+          firstTimestamp: item.firstTime,
+          lastTimestamp: item.lastTime
+        })),
+        abortSignal: controller.current,
+        onMessage: (text: string) => {
+          setEventAnalysesText((state) => (state += text));
+        }
+      });
+    } catch (err: any) {
+      toast({
+        title: typeof err === 'string' ? err : err?.message || '智能分析出错了~',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true
+      });
+      onCloseAnalysesModel();
+    }
+    onEndAnalyses();
+  }, [events, onCloseAnalysesModel, onEndAnalyses, onOpenAnalyses, onStartAnalyses, toast]);
 
   return (
     <Modal isOpen={true} onClose={closeFn} size={'sm'} isCentered>
@@ -163,9 +226,14 @@ const Logs = ({
             </Box>
           </Box>
           <Flex position={'relative'} flexDirection={'column'} h={'100%'}>
-            <Box mb={4} color={'blackAlpha.600'}>
-              Events
-            </Box>
+            <Flex mb={4} alignItems={'center'}>
+              <Box color={'blackAlpha.600'}>Events</Box>
+              {events.length > 0 && (
+                <Button ml={3} size={'xs'} variant={'outline'} onClick={onclickAnalyses}>
+                  智能分析
+                </Button>
+              )}
+            </Flex>
             <Box flex={'1 0 0'} h={0} overflowY={'auto'}>
               {events.map((event, i) => (
                 <Box
@@ -187,20 +255,18 @@ const Logs = ({
                     borderColor: event.type === 'Warning' ? '#F65959' : '#08D5E2'
                   }}
                 >
-                  <Flex lineHeight={1} mb={2}>
+                  <Flex lineHeight={1} mb={2} alignItems={'center'}>
                     <Box fontWeight={'bold'}>
                       {event.reason},&ensp;Last Occur: {event.lastTime}
                     </Box>
-                    <Box ml={2} color={'blackAlpha.600'} fontSize={'xs'}>
+                    <Box ml={2} color={'blackAlpha.700'}>
                       First Seen: {event.firstTime}
                     </Box>
-                    <Box ml={2} color={'blackAlpha.600'} fontSize={'xs'}>
+                    <Box ml={2} color={'blackAlpha.700'}>
                       count: {event.count}
                     </Box>
                   </Flex>
-                  <Box color={'blackAlpha.600'} fontSize={'xs'}>
-                    {event.message}
-                  </Box>
+                  <Box color={'blackAlpha.700'}>{event.message}</Box>
                 </Box>
               ))}
               {events.length === 0 && !isLoading && (
@@ -220,6 +286,24 @@ const Logs = ({
           </Flex>
         </Grid>
       </ModalContent>
+      {/* analyses modal */}
+      <Modal isOpen={isOpenAnalyses} onClose={onCloseAnalysesModel}>
+        <ModalOverlay />
+        <ModalContent maxW={'50vw'}>
+          <ModalHeader>Pod 问题分析</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody position={'relative'}>
+            <Box
+              className={isAnalyzing ? styles.analysesAnimation : ''}
+              h={'60vh'}
+              overflowY={'auto'}
+              whiteSpace={'pre-wrap'}
+            >
+              {eventAnalysesText}
+            </Box>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Modal>
   );
 };
