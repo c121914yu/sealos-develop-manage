@@ -5,10 +5,10 @@ import type {
   V1Service,
   V1Ingress,
   V1Secret,
-  V1HorizontalPodAutoscaler,
   V1Pod,
   SinglePodMetrics,
-  CoreV1EventList
+  CoreV1EventList,
+  V2HorizontalPodAutoscaler
 } from '@kubernetes/client-node';
 import dayjs from 'dayjs';
 import yaml from 'js-yaml';
@@ -17,9 +17,16 @@ import type {
   PodDetailType,
   AppDetailType,
   PodMetrics,
-  PodEvent
+  PodEvent,
+  HpaTarget
 } from '@/types/app';
-import { appStatusMap, podStatusMap } from '@/constants/app';
+import {
+  appStatusMap,
+  podStatusMap,
+  pauseKey,
+  maxReplicasKey,
+  minReplicasKey
+} from '@/constants/app';
 import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
 import { defaultEditVal } from '@/constants/editApp';
@@ -32,10 +39,8 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
   return {
     id: app.metadata?.uid || ``,
     name: app.metadata?.name || 'app name',
-    status:
-      app.status?.readyReplicas === app.status?.replicas
-        ? appStatusMap.running
-        : appStatusMap.waiting,
+    status: appStatusMap.running,
+    isPause: !!app?.metadata?.annotations?.[pauseKey],
     createTime: dayjs(app.metadata?.creationTimestamp).format('YYYY-MM-DD hh:mm'),
     cpu: cpuFormatToM(app.spec?.template?.spec?.containers?.[0]?.resources?.limits?.cpu || '0'),
     memory: memoryFormatToMi(
@@ -44,8 +49,8 @@ export const adaptAppListItem = (app: V1Deployment): AppListItemType => {
     usedCpu: new Array(30).fill(0),
     useMemory: new Array(30).fill(0),
     activeReplicas: app.status?.readyReplicas || 0,
-    maxReplicas: +(app.metadata?.annotations?.maxReplicas || app.status?.readyReplicas || 0),
-    minReplicas: +(app.metadata?.annotations?.minReplicas || app.status?.readyReplicas || 0)
+    maxReplicas: +(app.metadata?.annotations?.[maxReplicasKey] || app.status?.readyReplicas || 0),
+    minReplicas: +(app.metadata?.annotations?.[minReplicasKey] || app.status?.readyReplicas || 0)
   };
 };
 
@@ -112,7 +117,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     [YamlKindEnum.Service]?: V1Service;
     [YamlKindEnum.ConfigMap]?: V1ConfigMap;
     [YamlKindEnum.Ingress]?: V1Ingress;
-    [YamlKindEnum.HorizontalPodAutoscaler]?: V1HorizontalPodAutoscaler;
+    [YamlKindEnum.HorizontalPodAutoscaler]?: V2HorizontalPodAutoscaler;
     [YamlKindEnum.Secret]?: V1Secret;
   } = {};
   configs.forEach((item) => {
@@ -135,6 +140,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     appName: appDeploy.metadata?.name || 'app Name',
     createTime: dayjs(appDeploy.metadata?.creationTimestamp).format('YYYY-MM-DD hh:mm'),
     status: appStatusMap.running,
+    isPause: !!appDeploy?.metadata?.annotations?.[pauseKey],
     imageName:
       appDeploy?.metadata?.annotations?.originImageName ||
       appDeploy.spec?.template?.spec?.containers?.[0]?.image ||
@@ -173,8 +179,12 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
     hpa: deployKindsMap.HorizontalPodAutoscaler?.spec
       ? {
           use: true,
-          target: 'cpu',
-          value: deployKindsMap.HorizontalPodAutoscaler.spec.targetCPUUtilizationPercentage || 50,
+          target:
+            (deployKindsMap.HorizontalPodAutoscaler.spec.metrics?.[0]?.resource
+              ?.name as HpaTarget) || 'cpu',
+          value:
+            deployKindsMap.HorizontalPodAutoscaler.spec.metrics?.[0]?.resource?.target
+              ?.averageUtilization || 50,
           minReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.minReplicas || 3,
           maxReplicas: deployKindsMap.HorizontalPodAutoscaler.spec.maxReplicas || 10
         }
@@ -235,7 +245,7 @@ export const adaptYamlToEdit = (yamlList: string[]) => {
     [YamlKindEnum.Service]?: V1Service;
     [YamlKindEnum.ConfigMap]?: V1ConfigMap;
     [YamlKindEnum.Ingress]?: V1Ingress;
-    [YamlKindEnum.HorizontalPodAutoscaler]?: V1HorizontalPodAutoscaler;
+    [YamlKindEnum.HorizontalPodAutoscaler]?: V2HorizontalPodAutoscaler;
     [YamlKindEnum.Secret]?: V1Secret;
   } = {};
 
@@ -273,11 +283,15 @@ export const adaptYamlToEdit = (yamlList: string[]) => {
         key: env.name,
         value: env.value
       })) || undefined,
-    hpa: deployKindsMap.HorizontalPodAutoscaler
+    hpa: deployKindsMap.HorizontalPodAutoscaler?.spec
       ? {
           use: true,
-          target: 'cpu',
-          value: '',
+          target:
+            (deployKindsMap.HorizontalPodAutoscaler.spec.metrics?.[0]?.resource
+              ?.name as HpaTarget) || 'cpu',
+          value:
+            deployKindsMap.HorizontalPodAutoscaler.spec.metrics?.[0]?.resource?.target
+              ?.averageUtilization || 50,
           minReplicas: deployKindsMap.HorizontalPodAutoscaler.spec?.maxReplicas,
           maxReplicas: deployKindsMap.HorizontalPodAutoscaler.spec?.minReplicas
         }

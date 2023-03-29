@@ -2,6 +2,7 @@ import yaml from 'js-yaml';
 import type { AppEditType } from '@/types/app';
 import { strToBase64, str2Num, pathFormat, pathToNameFormat } from '@/utils/tools';
 import { SEALOS_DOMAIN } from '@/store/static';
+import { maxReplicasKey, minReplicasKey } from '@/constants/app';
 
 export const json2Development = (data: AppEditType) => {
   const template = {
@@ -11,8 +12,8 @@ export const json2Development = (data: AppEditType) => {
       name: data.appName,
       annotations: {
         originImageName: data.imageName,
-        minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
-        maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
+        [minReplicasKey]: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
+        [maxReplicasKey]: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
         [`${SEALOS_DOMAIN}/appname`]: data.appName,
@@ -131,8 +132,8 @@ export const json2StatefulSet = (data: AppEditType) => {
       name: data.appName,
       annotations: {
         originImageName: data.imageName,
-        minReplicas: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
-        maxReplicas: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
+        [minReplicasKey]: `${data.hpa.use ? data.hpa.minReplicas : data.replicas}`,
+        [maxReplicasKey]: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
         [`${SEALOS_DOMAIN}/appname`]: data.appName,

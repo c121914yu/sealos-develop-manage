@@ -11,6 +11,8 @@ import type {
   V1StatefulSet
 } from '@kubernetes/client-node';
 
+export type HpaTarget = 'cpu' | 'memory';
+
 export type DeployKindsType =
   | V1Deployment
   | V1StatefulSet
@@ -34,6 +36,7 @@ export interface AppListItemType {
   id: string;
   name: string;
   status: AppStatusMapType;
+  isPause: boolean;
   createTime: string;
   cpu: number;
   memory: number;
@@ -65,7 +68,7 @@ export interface AppEditType {
   }[];
   hpa: {
     use: boolean;
-    target: 'cpu' | 'memory';
+    target: HpaTarget;
     value: number;
     minReplicas: number;
     maxReplicas: number;
@@ -90,6 +93,7 @@ export interface AppDetailType extends AppEditType {
   id: string;
   createTime: string;
   status: AppStatusMapType;
+  isPause: boolean;
   imageName: string;
   usedCpu: number[];
   usedMemory: number[];

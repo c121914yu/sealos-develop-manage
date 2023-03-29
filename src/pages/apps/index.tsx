@@ -15,7 +15,11 @@ export default function Home() {
 
   useQuery(
     ['intervalLoadPods', appList.length],
-    () => appList.map((app) => intervalLoadPods(app.name)),
+    () =>
+      appList.map((app) => {
+        if (app.isPause) return null;
+        return intervalLoadPods(app.name);
+      }),
     {
       refetchOnMount: true,
       refetchInterval: 3000

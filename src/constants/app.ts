@@ -1,7 +1,8 @@
 export enum AppStatusEnum {
   running = 'running',
   waiting = 'waiting',
-  error = 'error'
+  error = 'error',
+  pause = 'pause'
 }
 export const appStatusMap = {
   [AppStatusEnum.running]: {
@@ -24,6 +25,13 @@ export const appStatusMap = {
     color: 'red.600',
     backgroundColor: 'red.300',
     dotColor: 'red.800'
+  },
+  [AppStatusEnum.pause]: {
+    label: '已暂停',
+    value: AppStatusEnum.pause,
+    color: 'blackAlpha.800',
+    backgroundColor: 'gray.300',
+    dotColor: 'gray.800'
   }
 };
 
@@ -55,3 +63,7 @@ export const podStatusMap = {
     color: 'red.600'
   }
 };
+
+export const pauseKey = 'deploy.cloud.sealos.io/pause';
+export const maxReplicasKey = 'deploy.cloud.sealos.io/maxReplicas';
+export const minReplicasKey = 'deploy.cloud.sealos.io/minReplicas';

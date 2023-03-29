@@ -104,7 +104,7 @@ const EditApp = ({ appName }: { appName?: string }) => {
       } catch (error) {
         console.log(error);
       }
-    }, 500),
+    }, 200),
     []
   );
   // watch form change, compute new yaml
@@ -113,27 +113,25 @@ const EditApp = ({ appName }: { appName?: string }) => {
     setForceUpdate(!forceUpdate);
   });
 
-  const submitSuccess = useCallback(() => {
+  const submitSuccess = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(async () => {
-      try {
-        const data = yamlList.map((item) => item.value);
-        if (appName) {
-          await putApp(data, appName);
-        } else {
-          await postDeployApp(data);
-          router.push(`/apps`);
-        }
-        toast({
-          title: applySuccess,
-          status: 'success'
-        });
-      } catch (error) {
-        console.error(error);
-        setErrorMessage(JSON.stringify(error));
+    try {
+      const data = yamlList.map((item) => item.value);
+      if (appName) {
+        await putApp(data, appName);
+      } else {
+        await postDeployApp(data);
+        router.push(`/apps`);
       }
-      setIsLoading(false);
-    }, 500);
+      toast({
+        title: applySuccess,
+        status: 'success'
+      });
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(JSON.stringify(error));
+    }
+    setIsLoading(false);
   }, [applySuccess, appName, router, setIsLoading, toast, yamlList]);
   const submitError = useCallback(() => {
     // deep search message

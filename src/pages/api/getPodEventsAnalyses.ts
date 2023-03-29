@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
           {
             role: 'system',
             content:
-              '以 Kubernetes 专家的身份判断一下这段输出有什么问题，简明扼要，请列出可能存在的问题、原因以及操作建议'
+              '以 Kubernetes 专家的身份判断下这段输出有什么问题，请列出可能存在的问题：\n可能的原因:\n操作建议:'
           },
           { role: 'user', content: JSON.stringify(events) }
         ],

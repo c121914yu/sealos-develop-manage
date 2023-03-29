@@ -1,5 +1,6 @@
 import * as k8s from '@kubernetes/client-node';
 import * as yaml from 'js-yaml';
+import type { V1Deployment, V1StatefulSet } from '@kubernetes/client-node';
 
 export function CheckIsInCluster(): [boolean, string] {
   if (
@@ -171,17 +172,40 @@ export async function getK8s({ kubeconfig }: { kubeconfig: string }) {
     return CreateYaml(kc, formatYaml);
   };
 
+  const getDeployApp = async (appName: string) => {
+    let app: V1Deployment | V1StatefulSet | null = null;
+    const k8sApp = kc.makeApiClient(k8s.AppsV1Api);
+
+    try {
+      app = (await k8sApp.readNamespacedDeployment(appName, namespace)).body;
+    } catch (error: any) {
+      error;
+    }
+
+    try {
+      app = (await k8sApp.readNamespacedStatefulSet(appName, namespace)).body;
+    } catch (error: any) {
+      error;
+    }
+    if (!app) {
+      return Promise.reject('can not find app');
+    }
+
+    return app;
+  };
+
   return Promise.resolve({
     kc,
     apiClient: client,
     k8sCore: kc.makeApiClient(k8s.CoreV1Api),
     k8sApp: kc.makeApiClient(k8s.AppsV1Api),
-    k8sAutoscaling: kc.makeApiClient(k8s.AutoscalingV1Api),
+    k8sAutoscaling: kc.makeApiClient(k8s.AutoscalingV2Api),
     k8sNetworkingApp: kc.makeApiClient(k8s.NetworkingV1Api),
     k8sCustomObjects: kc.makeApiClient(k8s.CustomObjectsApi),
     metricsClient: new k8s.Metrics(kc),
     kube_user,
     namespace,
-    applyYamlList
+    applyYamlList,
+    getDeployApp
   });
 }

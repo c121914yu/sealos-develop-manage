@@ -10,32 +10,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (!appName) {
       throw new Error('appName is empty');
     }
-    const { k8sApp, namespace } = await getK8s({
+    const { k8sApp, getDeployApp, apiClient, namespace } = await getK8s({
       kubeconfig: await authSession(req.headers)
     });
 
-    try {
-      const { body: deployment } = await k8sApp.readNamespacedDeployment(appName, namespace);
+    const app = await getDeployApp(appName);
 
-      if (deployment && deployment.spec?.template.metadata?.labels) {
-        deployment.spec.template.metadata.labels['restartTime'] = `${Date.now()}`;
-        await k8sApp.replaceNamespacedDeployment(appName, namespace, deployment);
-        return jsonRes(res);
-      }
-    } catch (error) {
-      error;
+    if (!app.spec?.template.metadata?.labels) {
+      throw new Error('app data error');
     }
 
-    try {
-      const { body: stateFulSet } = await k8sApp.readNamespacedStatefulSet(appName, namespace);
+    app.spec.template.metadata.labels['restartTime'] = `${Date.now()}`;
+    await apiClient.replace(app);
 
-      if (stateFulSet && stateFulSet.spec?.template.metadata?.labels) {
-        stateFulSet.spec.template.metadata.labels['restartTime'] = `${Date.now()}`;
-        await k8sApp.replaceNamespacedStatefulSet(appName, namespace, stateFulSet);
-      }
-    } catch (error) {
-      error;
-    }
     jsonRes(res);
   } catch (err: any) {
     jsonRes(res, {

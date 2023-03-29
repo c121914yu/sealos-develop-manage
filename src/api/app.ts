@@ -43,4 +43,8 @@ export const getPodEvents = (podName: string) =>
 
 export const restartAppByName = (appName: string) => GET(`/api/restartApp?appName=${appName}`);
 
+export const pauseAppByName = (appName: string) => GET(`/api/pauseApp?appName=${appName}`);
+
+export const startAppByName = (appName: string) => GET(`/api/startApp?appName=${appName}`);
+
 export const restartPodByName = (podName: string) => GET(`/api/restartPod?podName=${podName}`);

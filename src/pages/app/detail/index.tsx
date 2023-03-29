@@ -19,7 +19,7 @@ const AppDetail = ({ appName }: { appName: string }) => {
   const { appDetail, setAppDetail, appDetailPods, intervalLoadPods } = useAppStore();
   const [podsLoaded, setPodsLoaded] = useState(false);
 
-  useQuery(['setAppDetail'], () => setAppDetail(appName), {
+  const { refetch } = useQuery(['setAppDetail'], () => setAppDetail(appName), {
     onError(err) {
       toast({
         title: String(err),
@@ -29,18 +29,31 @@ const AppDetail = ({ appName }: { appName: string }) => {
   });
 
   // interval get pods metrics
-  useQuery(['intervalLoadPods'], () => intervalLoadPods(appName), {
-    refetchOnMount: true,
-    refetchInterval: 3000,
-    onSettled() {
-      setPodsLoaded(true);
+  useQuery(
+    ['intervalLoadPods'],
+    () => {
+      if (appDetail?.isPause) return null;
+      return intervalLoadPods(appName);
+    },
+    {
+      refetchOnMount: true,
+      refetchInterval: 3000,
+      onSettled() {
+        setPodsLoaded(true);
+      }
     }
-  });
+  );
 
   return (
     <Flex flexDirection={'column'} height={'100vh'} backgroundColor={'#f9f9f9'} px={4} pb={4}>
       <Box>
-        <Header appName={appName} appId={appDetail?.id} appStatus={appDetail?.status} />
+        <Header
+          appName={appName}
+          appId={appDetail?.id}
+          appStatus={appDetail?.status}
+          isPause={appDetail?.isPause}
+          refetch={refetch}
+        />
       </Box>
       <Flex position={'relative'} flex={'1 0 0'} h={0}>
         <Card

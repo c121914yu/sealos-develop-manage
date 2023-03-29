@@ -11,6 +11,7 @@ export const MOCK_APPS: AppListItemType[] = [
     usedCpu: [2, 1, 4, 1, 80, 50],
     useMemory: [2, 1, 4, 1, 2, 20],
     activeReplicas: 1,
+    isPause: false,
     maxReplicas: 1,
     minReplicas: 1
   },
@@ -22,6 +23,7 @@ export const MOCK_APPS: AppListItemType[] = [
     cpu: 100,
     memory: 100,
     usedCpu: [2, 1, 4, 1, 2],
+    isPause: false,
     useMemory: [2, 1, 4, 1, 2],
     activeReplicas: 1,
     maxReplicas: 1,
@@ -32,6 +34,7 @@ export const MOCK_APPS: AppListItemType[] = [
     name: 'string',
     status: appStatusMap.running,
     createTime: 'string',
+    isPause: false,
     cpu: 100,
     memory: 100,
     usedCpu: [2, 1, 4, 1, 2],
@@ -145,7 +148,6 @@ spec:
 export const MOCK_PODS: PodDetailType[] = [
   {
     podName: '1',
-
     nodeName: 'dafda-fasd-fas',
     ip: '311.241.41.41',
     restarts: 10,
@@ -280,9 +282,10 @@ export const MOCK_PODS: PodDetailType[] = [
 ];
 
 export const MOCK_APP_DETAIL: AppDetailType = {
-  id: 'sss',
+  id: '4bd50c41-149e-4da5-89d5-0308b9dd75c6',
   createTime: '2022/1/22',
   status: appStatusMap.waiting,
+  isPause: false,
   appName: '答复水电费收到受到',
   imageName: 'dafdsa/asdfad:asdfsda',
   runCMD: 'dafda',

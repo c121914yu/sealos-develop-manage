@@ -41,7 +41,9 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
     {
       title: '状态',
       key: 'status',
-      render: (item: AppListItemType) => <AppStatusTag status={item.status} />
+      render: (item: AppListItemType) => (
+        <AppStatusTag status={item.status} isPause={item.isPause} />
+      )
     },
     {
       title: '创建时间',
@@ -84,8 +86,8 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
       title: '操作',
       key: 'control',
       render: (item: AppListItemType) => (
-        <Button variant={'base'} onClick={(e) => router.push(`/app/edit?name=${item.name}`)}>
-          变更
+        <Button variant={'outline'} onClick={() => router.push(`/app/detail?name=${item.name}`)}>
+          详情
         </Button>
       )
     }
@@ -129,14 +131,7 @@ const AppList = ({ apps = [] }: { apps: AppListItemType[] }) => {
                 }}
               >
                 {columns.map((col, i) => (
-                  <Td
-                    key={col.key}
-                    onClick={(e) => {
-                      if (i === columns.length - 1) {
-                        e.stopPropagation();
-                      }
-                    }}
-                  >
+                  <Td key={col.key}>
                     {col.render ? col.render(app) : col.dataIndex ? `${app[col.dataIndex]}` : ''}
                   </Td>
                 ))}
