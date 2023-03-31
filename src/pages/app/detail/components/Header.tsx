@@ -114,7 +114,7 @@ const Header = ({
       {isPause ? (
         <Button
           mr={5}
-          leftIcon={<EditIcon />}
+          leftIcon={<MyIcon name="start" color={'white'} w={'18px'} />}
           isLoading={loading}
           colorScheme={'blue'}
           onClick={handleStartApp}
@@ -124,9 +124,10 @@ const Header = ({
       ) : (
         <Button
           mr={5}
-          leftIcon={<EditIcon />}
+          leftIcon={<MyIcon name="pause" color={'blue.600'} w={'16px'} />}
           isLoading={loading}
           colorScheme={'blue'}
+          variant={'outline'}
           onClick={onOpenPause(handlePauseApp)}
         >
           暂停

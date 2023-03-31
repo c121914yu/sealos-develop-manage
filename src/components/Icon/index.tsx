@@ -13,7 +13,9 @@ const map = {
   delete: require('./icons/delete.svg').default,
   statusicon: require('./icons/statusicon.svg').default,
   restart: require('./icons/restart.svg').default,
-  sealos: require('./icons/sealos.svg').default
+  sealos: require('./icons/sealos.svg').default,
+  start: require('./icons/start.svg').default,
+  pause: require('./icons/pause.svg').default
 };
 
 const MyIcon = ({
