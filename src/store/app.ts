@@ -30,7 +30,7 @@ export const useAppStore = create<State>()(
       },
       setAppDetail: async (appName: string) => {
         set((state) => {
-          // state.appDetail = undefined;
+          state.appDetail = undefined;
           state.appDetailPods = [];
         });
         const res = await getAppByName(appName);
