@@ -61,13 +61,8 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
     title: string;
     dataIndex?: keyof PodDetailType;
     key: string;
-    render?: (item: PodDetailType) => JSX.Element | string;
+    render?: (item: PodDetailType, i: number) => JSX.Element | string;
   }[] = [
-    {
-      title: 'Pod Name',
-      key: 'podName',
-      dataIndex: 'podName'
-    },
     {
       title: 'Restarts',
       key: 'restarts',
@@ -118,6 +113,13 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
           <Button
             mr={2}
             colorScheme={'blue'}
+            onClick={() => setDetailPodIndex(pods.findIndex((pod) => pod.podName === item.podName))}
+          >
+            详情
+          </Button>
+          <Button
+            mr={2}
+            colorScheme={'blue'}
             variant={'outline'}
             isDisabled={item.status.value !== PodStatusEnum.Running}
             onClick={() => setLogsPod(item.podName)}
@@ -160,24 +162,13 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
             {pods.map((app) => (
               <Tr
                 key={app.podName}
-                cursor={'pointer'}
                 _hover={{
                   backgroundColor: 'gray.50'
                 }}
-                onClick={() =>
-                  setDetailPodIndex(pods.findIndex((item) => item.podName === app.podName))
-                }
               >
                 {columns.map((col, i) => (
-                  <Td
-                    key={col.key}
-                    onClick={(e) => {
-                      if (i === columns.length - 1) {
-                        e.stopPropagation();
-                      }
-                    }}
-                  >
-                    {col.render ? col.render(app) : col.dataIndex ? `${app[col.dataIndex]}` : ''}
+                  <Td key={col.key}>
+                    {col.render ? col.render(app, i) : col.dataIndex ? `${app[col.dataIndex]}` : ''}
                   </Td>
                 ))}
               </Tr>

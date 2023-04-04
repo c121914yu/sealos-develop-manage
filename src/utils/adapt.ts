@@ -27,7 +27,7 @@ import {
   maxReplicasKey,
   minReplicasKey
 } from '@/constants/app';
-import { cpuFormatToM, memoryFormatToMi, formatPodTime } from '@/utils/tools';
+import { cpuFormatToM, memoryFormatToMi, formatPodTime, atobSecretYaml } from '@/utils/tools';
 import type { DeployKindsType, AppEditType } from '@/types/app';
 import { defaultEditVal } from '@/constants/editApp';
 import { customAlphabet } from 'nanoid';
@@ -198,10 +198,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
           value
         }))
       : [],
-    secret: {
-      ...defaultEditVal.secret,
-      use: !!deployKindsMap.Secret?.data
-    },
+    secret: atobSecretYaml(deployKindsMap?.Secret?.data?.['.dockerconfigjson']),
     storeList: deployKindsMap.StatefulSet?.spec?.volumeClaimTemplates
       ? deployKindsMap.StatefulSet?.spec?.volumeClaimTemplates.map((item) => ({
           path: item.metadata?.annotations?.path || '',

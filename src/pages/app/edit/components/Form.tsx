@@ -223,12 +223,16 @@ const Form = ({
                     <Flex alignItems={'center'}>
                       <Label>镜像名</Label>
                       <Input
+                        value={getValues('imageName')}
                         {...register('imageName', {
-                          required: '镜像名不能为空'
+                          required: '镜像名不能为空',
                           // pattern: {
                           //   value: /^.+\/.+:.+$/g,
                           //   message: '镜像名需满足 url/name:version 的格式'
-                          // }
+                          // },
+                          setValueAs(e) {
+                            return e.replace(/\s*/g, '');
+                          }
                         })}
                       />
                     </Flex>

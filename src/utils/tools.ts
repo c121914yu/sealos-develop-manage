@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 import { useToast } from '@/hooks/useToast';
+import { AppEditType } from '@/types/app';
+import { defaultEditVal } from '@/constants/editApp';
 
 /**
  * copy text data
@@ -73,7 +75,6 @@ export const reactLocalFileContent = (file: File) => {
  * str to base64
  */
 export const strToBase64 = (str: string) => {
-  const encoded = encodeURIComponent(str);
   try {
     const base64 = window.btoa(str);
 
@@ -82,6 +83,26 @@ export const strToBase64 = (str: string) => {
     console.log(error);
   }
   return '';
+};
+/**
+ * atob secret yaml
+ */
+export const atobSecretYaml = (secret?: string): AppEditType['secret'] => {
+  if (!secret) return defaultEditVal.secret;
+  try {
+    const secretData = JSON.parse(window.atob(secret)).auths;
+    const serverAddress = Object.keys(secretData)[0];
+
+    return {
+      serverAddress,
+      username: secretData[serverAddress].username,
+      password: secretData[serverAddress].password,
+      use: true
+    };
+  } catch (error) {
+    console.log(error);
+  }
+  return defaultEditVal.secret;
 };
 
 /**
