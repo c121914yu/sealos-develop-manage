@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, Flex, Grid } from '@chakra-ui/react';
+import { Box, Flex, Grid, Link } from '@chakra-ui/react';
 import type { AppDetailType } from '@/types/app';
 import PodLineChart from '@/components/PodLineChart';
 import { useCopyData } from '@/utils/tools';
@@ -10,6 +10,19 @@ import { SEALOS_DOMAIN } from '@/store/static';
 const AppMainInfo = ({ app }: { app: AppDetailType }) => {
   if (!app) return null;
   const { copyData } = useCopyData();
+  const inlineNetwork = useMemo(
+    () => `http://${app.appName}.${getUserNamespace()}.svc.cluster.local:${app.containerOutPort}`,
+    [app]
+  );
+  const outlineNetwork = useMemo(
+    () =>
+      app.accessExternal.use
+        ? `https://${
+            app.accessExternal.selfDomain || `${app.accessExternal.outDomain}.${SEALOS_DOMAIN}`
+          }`
+        : '',
+    [app]
+  );
 
   const cpuUsed = useMemo(
     () => `${((app.usedCpu[app.usedCpu.length - 1] / app.cpu) * 100).toFixed(2)}%`,
@@ -57,46 +70,59 @@ const AppMainInfo = ({ app }: { app: AppDetailType }) => {
         </Grid>
         <Box mt={4}>网络配置</Box>
         <Flex mt={2}>
-          {[
-            {
-              label: '内网地址',
-              value: `http://${app.appName}.${getUserNamespace()}.svc.cluster.local:${
-                app.containerOutPort
-              }`
-            },
-            {
-              label: '外网地址',
-              value: app.accessExternal.use
-                ? app.accessExternal.selfDomain ||
-                  `${app.accessExternal.outDomain}.${SEALOS_DOMAIN}`
-                : '未开启'
-            }
-          ].map((item) => (
-            <Flex
+          <Flex
+            flex={'1 0 0'}
+            w={0}
+            _notLast={{
+              mr: 4
+            }}
+            p={3}
+            backgroundColor={'#F8F8FA'}
+            borderRadius={'sm'}
+            fontSize={'sm'}
+          >
+            <Box mr={3}>内网地址</Box>
+            <Box
               flex={'1 0 0'}
               w={0}
-              _notLast={{
-                mr: 4
-              }}
-              key={item.label}
-              p={3}
-              backgroundColor={'#F8F8FA'}
-              borderRadius={'sm'}
-              fontSize={'sm'}
+              userSelect={'none'}
+              cursor={'pointer'}
+              color={'black'}
+              onClick={() => copyData(inlineNetwork)}
             >
-              <Box mr={3}>{item.label}</Box>
-              <Box
+              {inlineNetwork}
+            </Box>
+          </Flex>
+          <Flex
+            flex={'1 0 0'}
+            w={0}
+            _notLast={{
+              mr: 4
+            }}
+            p={3}
+            backgroundColor={'#F8F8FA'}
+            borderRadius={'sm'}
+            fontSize={'sm'}
+          >
+            <Box mr={3}>外网地址</Box>
+            {outlineNetwork ? (
+              <Link
+                href={outlineNetwork}
+                target={'_blank'}
                 flex={'1 0 0'}
                 w={0}
                 userSelect={'none'}
                 cursor={'pointer'}
                 color={'black'}
-                onClick={() => copyData(item.value)}
               >
-                {item.value}
+                {outlineNetwork}
+              </Link>
+            ) : (
+              <Box flex={'1 0 0'} w={0} userSelect={'none'} color={'black'}>
+                未开启
               </Box>
-            </Flex>
-          ))}
+            )}
+          </Flex>
         </Flex>
       </>
     </Box>

@@ -77,8 +77,8 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
       title: 'Cpu',
       key: 'cpu',
       render: (item: PodDetailType) => (
-        <Box h={'35px'} w={'90px'}>
-          <PodLineChart type="cpu" cpu={item.cpu} data={item.usedCpu.slice(-6)} />
+        <Box h={'35px'} w={'120px'}>
+          <PodLineChart type="cpu" cpu={item.cpu} data={item.usedCpu.slice(-8)} />
         </Box>
       )
     },
@@ -86,8 +86,8 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
       title: 'Memory',
       key: 'memory',
       render: (item: PodDetailType) => (
-        <Box h={'35px'} w={'90px'}>
-          <PodLineChart type="memory" data={item.usedMemory.slice(-6)} />
+        <Box h={'35px'} w={'120px'}>
+          <PodLineChart type="memory" data={item.usedMemory.slice(-8)} />
         </Box>
       )
     },
@@ -160,12 +160,7 @@ const Pods = ({ pods = [], loading }: { pods: PodDetailType[]; loading: boolean 
           </Thead>
           <Tbody>
             {pods.map((app) => (
-              <Tr
-                key={app.podName}
-                _hover={{
-                  backgroundColor: 'gray.50'
-                }}
-              >
+              <Tr key={app.podName}>
                 {columns.map((col, i) => (
                   <Td key={col.key}>
                     {col.render ? col.render(app, i) : col.dataIndex ? `${app[col.dataIndex]}` : ''}
