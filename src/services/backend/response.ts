@@ -1,5 +1,5 @@
 import { NextApiResponse } from 'next';
-import { ERROR_TEXT } from '../error';
+import { ERROR_TEXT, ERROR_RESPONSE } from '../error';
 
 export const jsonRes = (
   res: NextApiResponse,
@@ -12,6 +12,12 @@ export const jsonRes = (
 ) => {
   const { code = 200, message = '', data = null, error } = props || {};
 
+  // Specified error
+  if (typeof error === 'string' && ERROR_RESPONSE[error]) {
+    return res.json(ERROR_RESPONSE[error]);
+  }
+
+  // another error
   let msg = message;
   if ((code < 200 || code >= 400) && !message) {
     msg = error?.body?.message || error?.message || '请求错误';
@@ -23,8 +29,10 @@ export const jsonRes = (
     console.log('error:', error);
     console.log('error message:', msg);
   }
+
   res.json({
     code,
+    statusText: '',
     message: msg,
     data: data || error
   });

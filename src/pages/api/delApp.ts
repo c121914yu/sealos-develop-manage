@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     ]);
 
     if (response.filter((item) => item.status === 'fulfilled').length === 0) {
-      return Promise.reject('Delete App Error');
+      throw new Error('Delete App Error');
     }
 
     jsonRes(res);
