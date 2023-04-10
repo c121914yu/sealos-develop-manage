@@ -134,6 +134,8 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
   }
 
   const domain = deployKindsMap?.Ingress?.spec?.rules?.[0].host;
+  const sealosDomain =
+    deployKindsMap?.Ingress?.metadata?.labels?.[`${SEALOS_DOMAIN}/app-deploy-manager-domain`];
 
   return {
     id: appDeploy.metadata?.uid || ``,
@@ -169,10 +171,7 @@ export const adaptAppDetail = (configs: DeployKindsType[]): AppDetailType => {
           backendProtocol: deployKindsMap.Ingress.metadata?.annotations?.[
             'nginx.ingress.kubernetes.io/backend-protocol'
           ] as AppEditType['accessExternal']['backendProtocol'],
-          outDomain:
-            SEALOS_DOMAIN && domain?.endsWith(SEALOS_DOMAIN)
-              ? domain?.split('.')[0] || nanoid()
-              : nanoid(),
+          outDomain: sealosDomain ? sealosDomain : nanoid(),
           selfDomain: SEALOS_DOMAIN && domain?.endsWith(SEALOS_DOMAIN) ? '' : domain || ''
         }
       : defaultEditVal.accessExternal,

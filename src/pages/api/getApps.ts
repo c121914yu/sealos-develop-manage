@@ -11,8 +11,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     const response = await Promise.allSettled([
-      k8sApp.listNamespacedDeployment(namespace),
-      k8sApp.listNamespacedStatefulSet(namespace)
+      k8sApp.listNamespacedDeployment(
+        namespace,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        `${process.env.SEALOS_DOMAIN}/app-deploy-manager`
+      ),
+      k8sApp.listNamespacedStatefulSet(
+        namespace,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        `${process.env.SEALOS_DOMAIN}/app-deploy-manager`
+      )
     ]);
 
     const apps = response
@@ -21,11 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       .filter((item) => item)
       .flat();
 
-    const data = apps.filter(
-      (item) => !!item.metadata?.labels ?? [`${process.env.SEALOS_DOMAIN}/appname`]
-    );
-
-    jsonRes(res, { data });
+    jsonRes(res, { data: apps });
   } catch (err: any) {
     jsonRes(res, {
       code: 500,

@@ -16,7 +16,7 @@ export const json2Development = (data: AppEditType) => {
         [maxReplicasKey]: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
-        [`${SEALOS_DOMAIN}/appname`]: data.appName,
+        [`${SEALOS_DOMAIN}/app-deploy-manager`]: data.appName,
         app: data.appName
       }
     },
@@ -136,7 +136,7 @@ export const json2StatefulSet = (data: AppEditType) => {
         [maxReplicasKey]: `${data.hpa.use ? data.hpa.maxReplicas : data.replicas}`
       },
       labels: {
-        [`${SEALOS_DOMAIN}/appname`]: data.appName,
+        [`${SEALOS_DOMAIN}/app-deploy-manager`]: data.appName,
         app: data.appName
       }
     },
@@ -275,7 +275,7 @@ export const json2Service = (data: AppEditType) => {
     metadata: {
       name: data.appName,
       labels: {
-        [`${SEALOS_DOMAIN}/appname`]: data.appName
+        [`${SEALOS_DOMAIN}/app-deploy-manager`]: data.appName
       }
     },
     spec: {
@@ -324,10 +324,13 @@ export const json2Ingress = (data: AppEditType) => {
     metadata: {
       name: data.appName,
       labels: {
-        [`${SEALOS_DOMAIN}/appname`]: data.appName
+        [`${SEALOS_DOMAIN}/app-deploy-manager`]: data.appName,
+        [`${SEALOS_DOMAIN}/app-deploy-manager-domain`]: `${data.accessExternal.outDomain}`
       },
       annotations: {
         'kubernetes.io/ingress.class': 'nginx',
+        'nginx.ingress.kubernetes.io/proxy-body-size': '32m',
+        'nginx.ingress.kubernetes.io/server-snippet': `gzip on;gzip_min_length 1024;gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;`,
         ...map[data.accessExternal.backendProtocol]
       }
     },
